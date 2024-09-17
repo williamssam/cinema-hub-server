@@ -1,5 +1,5 @@
 {
-	"cSpell.words": ["TIMESTAMPTZ", "TIMESTAMPZ", "udowntime"],
+	"cSpell.words": ["imbd", "tagline", "TIMESTAMPTZ", "TIMESTAMPZ", "udowntime"],
 	"editor.formatOnSave": true,
 	"editor.formatOnPaste": true,
 	"editor.defaultFormatter": "biomejs.biome",

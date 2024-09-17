@@ -1,4 +1,4 @@
-import { HttpStatusCode } from '../utils/status-codes'
+import { HttpStatusCode } from "../utils/status-codes";
 
 // Note: Our custom error extends from Error, so we can throw this error as an exception.
 export class CustomError extends Error {
