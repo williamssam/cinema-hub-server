@@ -6,3 +6,6 @@ CREATE TABLE IF NOT EXISTS theatres (
 	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 )
+
+-- this updates the "name" column type to unique
+ALTER TABLE theatres ALTER COLUMN name TYPE UNIQUE
