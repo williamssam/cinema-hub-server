@@ -27,7 +27,6 @@
 		"enabled": true,
 		"formatWithErrors": true,
 		"indentStyle": "tab",
-		"lineWidth": 120,
 		"ignore": ["node_modules/**", "dist"]
 	},
 	"javascript": {

@@ -5,6 +5,7 @@
 		"moduleResolution": "Node",
 		"outDir": "dist",
 		"importsNotUsedAsValues": "remove",
+		"allowJs": true,
 		"strict": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
@@ -18,7 +19,8 @@
 		"src/middlewares",
 		"src/exceptions",
 		"src/db",
-		"src/server.ts"
+		"src/server.ts",
+		"scripts/migrate.mjs"
 	],
 	"exclude": ["node_modules/**"]
 }
