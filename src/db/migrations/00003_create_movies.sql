@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS movies (
 	overview TEXT NOT NULL,
 	original_language TEXT NOT NULL,
 	homepage TEXT,
-	imbd_url TEXT,
 	genre_id INTEGER NOT NULL REFERENCES genres(id),
 	runtime TEXT NOT NULL,
 	director TEXT NOT NULL,

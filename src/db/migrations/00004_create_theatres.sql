@@ -1,11 +1,8 @@
 CREATE TABLE IF NOT EXISTS theatres (
 	id SERIAL PRIMARY KEY,
-	name TEXT NOT NULL,
+	name TEXT UNIQUE NOT NULL,
 	capacity INTEGER NOT NULL,
 	room_id TEXT NOT NULL,
 	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 )
-
--- this updates the "name" column type to unique
-ALTER TABLE theatres ALTER COLUMN name TYPE UNIQUE

@@ -15,7 +15,7 @@ export const getTheatreSchema = z.object({
 		id: z
 			.string({ required_error: "Theatre ID is required" })
 			.refine(value => !Number.isNaN(Number(value)), {
-				message: "Theatre ID is can only be a number",
+				message: "Theatre ID can only be a number",
 			}),
 	}),
 })
