@@ -5,8 +5,8 @@
 	"main": "index.js",
 	"type": "module",
 	"scripts": {
+		"migrate": "node src/scripts/migrate.js",
 		"dev": "tsx watch --clear-screen=false src/server.ts | pino-pretty",
-		"migrate": "node src/scripts/migrate.mjs",
 		"start": "node dist/index.js",
 		"lint": "biome check src/",
 		"lint:fix": "biome check src/ --fix",

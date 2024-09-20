@@ -4,10 +4,19 @@ import { ApiError } from "../../exceptions/api-error"
 import { HttpStatusCode } from "../../utils/status-codes"
 import type {
 	CreateMovieInput,
+	GetAllMoviesInput,
 	GetMovieInput,
 	UpdateMovieInput,
 } from "./movies.schema"
-import { getMovieGenres, getMovieWithId } from "./movies.service"
+import {
+	addMovieTransaction,
+	getMovie,
+	getMovieGenres,
+	getMovieWithId,
+	getMovies,
+	totalMovies,
+	updateMovieTransaction,
+} from "./movies.service"
 
 export const getMovieGenresController = async (
 	req: Request,
@@ -33,14 +42,24 @@ export const createMovieHandler = async (
 	next: NextFunction
 ) => {
 	try {
-		const payload = Object.values(req.body).join(", ")
+		const { genre_ids } = req.body
 
-		const movie =
-			await sql`INSERT INTO movies (title, tagline, overview, original_language, homepage, imbd_url, genre_id, runtime, director, release_date, poster_image_url ) VALUES (${payload}) RETURNING *`
+		const genre = await sql`SELECT id FROM genres WHERE id IN ${sql(genre_ids)}`
+		if (!genre) {
+			throw new ApiError("Genre ID does not exist", HttpStatusCode.NOT_FOUND)
+		}
+
+		const movie = await addMovieTransaction(req.body)
+		if (!movie) {
+			throw new ApiError(
+				"Error creating movie, please try again",
+				HttpStatusCode.INTERNAL_SERVER_ERROR
+			)
+		}
 
 		return res.status(HttpStatusCode.CREATED).json({
 			success: true,
-			message: "Movie created successfully!",
+			message: "Movie added successfully!",
 			data: movie,
 		})
 	} catch (error) {
@@ -55,15 +74,26 @@ export const updateMovieHandler = async (
 ) => {
 	try {
 		const { id } = req.params
-		const payload = req.body
+		const { genre_ids } = req.body
 
 		const data = await getMovieWithId(id)
 		if (!data.length) {
 			throw new ApiError("Movie does not exist", HttpStatusCode.NOT_FOUND)
 		}
 
-		const movie =
-			await sql`UPDATE movies SET title = ${payload.title}, tagline = ${payload.tagline}, overview = ${payload.overview}, original_language = ${payload.original_language}, poster_image_url = ${payload.poster_image_url}, homepage = ${payload.homepage}, genre_id = ${payload.genre_id}, runtime = ${payload.runtime}, director = ${payload.director}, release_date = ${payload.release_date} WHERE id = ${id} RETURNING *`
+		const genre = await sql`SELECT id FROM genres WHERE id IN ${sql(genre_ids)}`
+		if (!genre) {
+			// FIXME: Tell the user the ID that does not exist
+			throw new ApiError("Genre IDs does not exist", HttpStatusCode.NOT_FOUND)
+		}
+
+		const movie = await updateMovieTransaction(req.body, id)
+		if (!movie) {
+			throw new ApiError(
+				"Error updating movie, please try again",
+				HttpStatusCode.INTERNAL_SERVER_ERROR
+			)
+		}
 
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
@@ -98,6 +128,7 @@ export const deleteMovieHandler = async (
 	}
 }
 
+
 export const getMovieHandler = async (
 	req: Request<GetMovieInput>,
 	res: Response,
@@ -106,33 +137,52 @@ export const getMovieHandler = async (
 	try {
 		const { id } = req.params
 
-		const data = await getMovieWithId(id)
-		if (!data.length) {
+		const movie = await getMovie({ movieId: id })
+		if (!movie.length) {
 			throw new ApiError("Movie does not exist", HttpStatusCode.NOT_FOUND)
 		}
 
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "Movie retrieved successfully!",
-			data: data[0],
+			data: movie.at(0),
 		})
 	} catch (error) {
 		return next(error)
 	}
 }
 
+// FIXME: Add pagination
 export const getAllMoviesHandler = async (
-	req: Request,
+	req: Request<unknown, unknown, unknown, GetAllMoviesInput>,
 	res: Response,
 	next: NextFunction
 ) => {
 	try {
-		const movies = await sql`SELECT * FROM movies`
+		// url: http://localhost:3000/movies?page=1&genre=1
+		const { page: requested_page, genre } = req.query
+
+		const page = Number(requested_page) || 1
+		const limit = 15
+
+		const movies = await getMovies({
+			genreId: genre,
+			page,
+		})
+		const total = await totalMovies(genre)
 
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "All movies retrieved successfully!",
 			data: movies,
+			meta: {
+				total: Number(total),
+				current_page: page,
+				per_page: limit,
+				total_pages: Math.ceil(total / limit) || 1,
+				has_next_page: page < Math.ceil(total / limit),
+				has_prev_page: page > 1,
+			},
 		})
 	} catch (error) {
 		return next(error)

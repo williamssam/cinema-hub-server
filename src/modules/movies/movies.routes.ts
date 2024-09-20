@@ -44,11 +44,6 @@ export default (router: Router) => {
 	)
 
 	/*
-	 * PUT route to fetch movie
-	 */
-	router.put("/movies/:id", [validateResource(getMovieSchema)], getMovieHandler)
-
-	/*
 	 * DELETE route to delete a movie
 	 */
 	router.delete(
@@ -56,4 +51,9 @@ export default (router: Router) => {
 		[validateResource(getMovieSchema)],
 		deleteMovieHandler
 	)
+
+	/*
+	 * GET route to fetch movie
+	 */
+	router.get("/movies/:id", [validateResource(getMovieSchema)], getMovieHandler)
 };

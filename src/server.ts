@@ -29,8 +29,8 @@ app.use(helmet());
 app.use(cookieParser());
 app.use(rateLimiter);
 
-app.use(errorHandler);
 app.use("/api/v1", router());
+app.use(errorHandler)
 
 app.listen(config.PORT, async () => {
 	// const path = fileURLToPath(new URL("./db/migrations", import.meta.url));

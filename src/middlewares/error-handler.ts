@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import { config } from "../config/configuration"
 import {
 	CustomError,
 	type CustomErrorResponse,
@@ -16,8 +17,8 @@ const errorHandler = (
 		return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
 			message: "Internal Server error. Something went wrong",
 			success: false,
-			// ...(IS_DEV && { stack: err.stack }),
-		});
+			...(config.environment.IS_DEV && { stack: err.stack }),
+		})
 	}
 
 	const customError = err as CustomError;

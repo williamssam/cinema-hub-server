@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { type AnyZodObject, ZodError } from "zod";
-import { IS_DEV } from "../constants/config";
+import { config } from "../config/configuration"
 import { HttpStatusCode } from "../utils/status-codes";
 
 /**
@@ -18,11 +18,12 @@ export const validateResource =
 			next();
 		} catch (error: any) {
 			if (error instanceof ZodError) {
-				const errorMessage = error.errors.map((err) => ({
+				const errorMessage = error.errors.map(err => ({
 					message: err.message,
 					path: err.path[1],
-					...(IS_DEV && { code: err.code }),
-				}));
+					...(config.environment.IS_DEV && { code: err.code }),
+				}))
+
 				return res.status(HttpStatusCode.BAD_REQUEST).json({
 					success: false,
 					errors: errorMessage,

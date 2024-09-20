@@ -20,5 +20,19 @@
 	"editor.codeActionsOnSave": {
 		"quickfix.biome": "explicit",
 		"source.organizeImports.biome": "explicit"
-	}
+	},
+	"[sql]": {
+		"editor.defaultFormatter": "ms-ossdata.vscode-postgresql"
+	},
+	"sqltools.connections": [
+		{
+			"previewLimit": 50,
+			"server": "localhost",
+			"port": 5432,
+			"driver": "PostgreSQL",
+			"name": "postgres",
+			"database": "cinemahub",
+			"username": "postgres"
+		}
+	]
 }
