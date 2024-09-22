@@ -1,4 +1,5 @@
 import { z } from "zod"
+import type { querySchema } from "../../libs/resuable-schema"
 
 export const createTheatreSchema = z.object({
 	body: z.object({
@@ -6,7 +7,7 @@ export const createTheatreSchema = z.object({
 		capacity: z.coerce
 			.number({ required_error: "Theatre capacity is required" })
 			.positive("Theatre capacity can only be a positive number")
-			.lte(10, "Theatre capacity cannot have less than 10 seats"),
+			.gte(10, "Theatre capacity cannot have less than 10 seats"),
 	}),
 })
 
@@ -28,4 +29,5 @@ export const updateTheatreSchema = z.object({
 export type CreateTheatreInput = z.infer<typeof createTheatreSchema>["body"]
 export type GetTheatreInput = z.infer<typeof getTheatreSchema>["params"]
 export type UpdateTheatreInput = z.infer<typeof updateTheatreSchema>
+export type GetAllTheatreInput = z.infer<typeof querySchema>["query"]
 

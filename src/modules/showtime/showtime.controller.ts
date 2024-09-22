@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express"
+import { PAGE_SIZE } from "../../constants/api"
 import { sql } from "../../db"
 import { ApiError } from "../../exceptions/api-error"
 import { HttpStatusCode } from "../../utils/status-codes"
@@ -6,11 +7,24 @@ import { getMovieWithId } from "../movies/movies.service"
 import { getTheatreWithId } from "../theatres/theatres.service"
 import type {
 	CreateShowtimeInput,
+	GetAllShowtimeInput,
 	GetShowtimeInput,
 	UpdateShowtimeInput,
+	UpdateShowtimeStatusInput,
 } from "./showtime.schema"
-import { getShowtimeDetails, getShowtimeWithId } from "./showtime.service"
+import { getShowtime, getShowtimeWithId } from "./showtime.service"
 
+
+/**
+ * @description Create a new showtime
+ * @route POST /showtime
+ * @param {CreateShowtimeInput} body - The showtime data
+ * @returns {object} - The created showtime
+ * @throws {ApiError} - If the movie or theatre does not exist
+ * @throws {ApiError} - If the time slot is already booked for a show at this theatre
+ * @throws {ApiError} - If the theatre is already in use
+ * @throws {ApiError} - If something went wrong, please try again
+ */
 export const createShowtimeHandler = async (
 	req: Request<unknown, unknown, CreateShowtimeInput>,
 	res: Response,
@@ -19,18 +33,40 @@ export const createShowtimeHandler = async (
 	try {
 		const { end_time, movie_id, price, start_time, theatre_id } = req.body
 
-		const movie = await getMovieWithId(movie_id.toString())
+		const movie = await getMovieWithId(String(movie_id))
 		if (!movie.length) {
 			throw new ApiError("Movie does not exist", HttpStatusCode.NOT_FOUND)
 		}
 
-		const theatre = await getTheatreWithId(theatre_id.toString())
+		const theatre = await getTheatreWithId(String(theatre_id))
 		if (!theatre.length) {
 			throw new ApiError("Theatre does not exist", HttpStatusCode.NOT_FOUND)
 		}
 
-		const showtime =
-			await sql`INSERT INTO showtime (movie_id, start_time, end_time, price, theatre_id) VALUES (${movie_id}, ${end_time}, ${start_time}, ${price}, ${theatre_id}) RETURNING *`
+		// check if there already a showtime set for that time at a particular theatre and status is not done or cancelled
+		const show =
+			await sql`SELECT * FROM showtime WHERE theatre_id = ${theatre_id} AND start_time >= ${start_time} AND end_time <= ${end_time} AND status != 'done' AND status != 'cancelled'`
+		if (show.length) {
+			throw new ApiError(
+				"That time slot is already booked for a show at this theatre.",
+				HttpStatusCode.CONFLICT
+			)
+		}
+
+		const data =
+			await sql`SELECT * FROM showtime WHERE theatre_id = ${theatre_id} AND status = 'active'`
+		if (data.length) {
+			throw new ApiError(
+				"Theatre is already in use, please choose another.",
+				HttpStatusCode.CONFLICT
+			)
+		}
+
+		const available_seats = theatre.at(0)?.capacity
+		const payload = { ...req.body, available_seats }
+
+		const showtime = await sql`INSERT INTO showtime ${sql(payload)} RETURNING *`
+
 		if (!showtime.length) {
 			throw new ApiError(
 				"Something went wrong, please try again",
@@ -62,7 +98,7 @@ export const updateShowtimeHandler = async (
 		const { end_time, movie_id, price, start_time, theatre_id } = req.body
 
 		const showtime = await getShowtimeWithId(id)
-		if (showtime.length) {
+		if (!showtime.length) {
 			throw new ApiError("Showtime does not exist", HttpStatusCode.NOT_FOUND)
 		}
 
@@ -87,14 +123,22 @@ export const updateShowtimeHandler = async (
 
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
-			message: "Showtime created successfully!",
-			data,
+			message: "Showtime updated successfully!",
+			data: data.at(0),
 		})
 	} catch (error) {
 		return next(error)
 	}
 }
 
+/**
+ * Deletes a showtime with a given ID
+ * @route DELETE /showtime/:id
+ * @param {Request<GetShowtimeInput>} req - The request object
+ * @param {Response} res - The response object
+ * @param {NextFunction} next - The next function
+ * @return {Promise<void>}
+ */
 export const deleteShowtimeHandler = async (
 	req: Request<GetShowtimeInput>,
 	res: Response,
@@ -104,7 +148,7 @@ export const deleteShowtimeHandler = async (
 		const { id } = req.params
 
 		const showtime = await getShowtimeWithId(id)
-		if (showtime.length) {
+		if (!showtime.length) {
 			throw new ApiError("Showtime does not exist", HttpStatusCode.NOT_FOUND)
 		}
 
@@ -118,7 +162,126 @@ export const deleteShowtimeHandler = async (
 	}
 }
 
+/**
+ * @description Fetch a single showtime with the given id
+ * @route GET /showtime/:id
+ * @param {string} id.path - The id of the showtime to fetch
+ * @param {string} [append_to_response.query] - A comma-separated list of fields to include in the response. Valid values are 'movie' and 'theatre'
+ * @returns {object} - The showtime with the given id, with the requested fields included
+ * @throws {ApiError} - If the showtime does not exist
+ */
 export const getShowtimeHandler = async (
+	req: Request<
+		GetShowtimeInput,
+		unknown,
+		unknown,
+		{ append_to_response: string }
+	>,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const { id } = req.params
+		// ?append_to_response=movie,theatre
+		const { append_to_response } = req.query
+
+		const showtime = await getShowtime({ id, append: append_to_response })
+		if (!showtime.length) {
+			throw new ApiError("Showtime does not exist", HttpStatusCode.NOT_FOUND)
+		}
+
+		return res.status(HttpStatusCode.OK).json({
+			success: true,
+			message: "Showtime fetched successfully!",
+			data: showtime.at(0),
+		})
+	} catch (error) {
+		return next(error)
+	}
+}
+
+/**
+ * @description Fetch all showtimes
+ * @route GET /showtime
+ * @param {number} [page.query] - The page number to fetch
+ * @param {string} [append_to_response.query] - A comma-separated list of fields to include in the response. Valid values are 'movie' and 'theatre'
+ * @returns {object} - The list of showtimes, with the requested fields included, and pagination metadata
+ * @throws {ApiError} - If the request fails
+ */
+export const getAllShowtimeHandler = async (
+	req: Request<unknown, unknown, unknown, GetAllShowtimeInput>,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const { page = 1, append_to_response } = req.query
+		const data = await getShowtime({ append: append_to_response })
+
+		const count = await sql`SELECT COUNT(*) FROM showtime`
+		const total = count.at(0)?.count
+
+		return res.status(HttpStatusCode.OK).json({
+			success: true,
+			message: "Showtime fetched successfully!",
+			data,
+			meta: {
+				page: page,
+				per_page: PAGE_SIZE,
+				total: Number(total),
+				total_pages: Math.ceil(total / PAGE_SIZE) || 0,
+			},
+		})
+	} catch (error) {
+		return next(error)
+	}
+}
+
+/**
+ * @description Update the status of a single showtime
+ * @route PATCH /showtime/:id/status
+ * @param {string} id.path - The id of the showtime to update
+ * @param {UpdateShowtimeStatusInput["body"]} body
+ * @returns {object} - The updated showtime with the new status
+ * @throws {ApiError} - If the showtime does not exist, or if the request fails
+ */
+export const updateShowtimeStatusHandler = async (
+	req: Request<
+		UpdateShowtimeStatusInput["params"],
+		unknown,
+		UpdateShowtimeStatusInput["body"]
+	>,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const { id } = req.params
+		const { status } = req.body
+
+		const showtime = await getShowtimeWithId(id)
+		if (!showtime.length) {
+			throw new ApiError("Showtime does not exist", HttpStatusCode.NOT_FOUND)
+		}
+
+		const data =
+			await sql`UPDATE showtime SET status = ${status} WHERE id = ${id} RETURNING *`
+		return res.status(HttpStatusCode.OK).json({
+			success: true,
+			message: "Showtime status updated successfully!",
+			data: data.at(0),
+		})
+	} catch (error) {
+		return next(error)
+	}
+}
+
+/**
+ * @description Get the available seats of a single showtime
+ * @route GET /showtime/:id/available-seats
+ * @param {string} id.path - The id of the showtime to fetch
+ * @returns {object} - The available seats of the showtime
+ * @throws {ApiError} - If the showtime does not exist, or if the request fails
+ */
+export const getShowtimeAvailableSeatsHandler = async (
 	req: Request<GetShowtimeInput>,
 	res: Response,
 	next: NextFunction
@@ -127,35 +290,19 @@ export const getShowtimeHandler = async (
 		const { id } = req.params
 
 		const showtime = await getShowtimeWithId(id)
-		if (showtime.length) {
+		if (!showtime.length) {
 			throw new ApiError("Showtime does not exist", HttpStatusCode.NOT_FOUND)
 		}
 
-		const data = await getShowtimeDetails(id)
+		const data =
+			await sql`SELECT available_seats FROM showtime WHERE id = ${id}`
+
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
-			message: "Showtime fetched successfully!",
-			data,
+			message: "Showtime available seats fetched successfully!",
+			data: data.at(0),
 		})
 	} catch (error) {
 		return next(error)
-	}
-}
-
-export const getAllShowtimeHandler = async (
-	req: Request,
-	res: Response,
-	next: NextFunction
-) => {
-	try {
-		const data = await getShowtimeDetails()
-
-		return res.status(HttpStatusCode.OK).json({
-			success: true,
-			message: "Showtime fetched successfully!",
-			data,
-		})
-	} catch (error) {
-		return error
 	}
 }

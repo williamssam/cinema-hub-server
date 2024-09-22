@@ -1,22 +1,44 @@
+import dayjs from "dayjs"
 import { z } from "zod"
+import { querySchema } from "../../libs/resuable-schema"
 
 export const createShowtimeSchema = z.object({
-	body: z.object({
-		movie_id: z
-			.number({ required_error: "Genre is required" })
-			.positive("Genre must be a positive number"),
-		theatre_id: z
-			.number({ required_error: "Genre is required" })
-			.positive("Genre must be a positive number"),
-		start_time: z.date({ required_error: "Start date and time is required" }),
-		end_time: z.date({ required_error: "End date and time is required" }),
-		price: z
-			.number({
-				required_error: "Price is required",
-				description: "We only allow cents",
-			})
-			.positive("Price must be a positive number"),
-	}),
+	body: z
+		.object({
+			movie_id: z
+				.number({ required_error: "Movie ID is required" })
+				.positive("Movie ID must be a positive number"),
+			theatre_id: z
+				.number({ required_error: "Theatre ID is required" })
+				.positive("Theatre ID must be a positive number"),
+			start_time: z
+				.string()
+				.datetime("Start date and time is required")
+				.refine(val => dayjs().isBefore(dayjs(val)), {
+					message: "Start date and time cannot be in the past",
+				}),
+			end_time: z
+				.string()
+				.datetime("End date and time is required")
+				.refine(val => dayjs().isBefore(dayjs(val)), {
+					message: "End date and time cannot be in the past",
+				}),
+			price: z.coerce
+				.number({
+					required_error: "Price is required",
+					description: "We only allow cents",
+				})
+				.positive("Price must be a positive number")
+				.int("Price must be an integer"),
+		})
+		.superRefine((val, ctx) => {
+			if (dayjs(val.start_time).isAfter(dayjs(val.end_time))) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					message: "End date cannot be before start date",
+				})
+			}
+		}),
 })
 
 export const getShowtimeSchema = z.object({
@@ -27,6 +49,14 @@ export const getShowtimeSchema = z.object({
 				message: "Showtime ID can only be a number",
 			}),
 	}),
+	// query: z.object({
+	// 	append_to_response: z
+	// 		.string()
+	// 		.regex(
+	// 			/^[a-zA-Z]+(,[a-zA-Z]+)?$/,
+	// 			"Append to response must be in the format 'word' or 'word,word'"
+	// 		),
+	// }),
 })
 
 export const updateShowtimeSchema = z.object({
@@ -34,6 +64,24 @@ export const updateShowtimeSchema = z.object({
 	...getShowtimeSchema.shape,
 })
 
+export const updateShowtimeStatusSchema = z.object({
+	...getShowtimeSchema.shape,
+	body: z.object({
+		status: z.enum(["active", "done", "cancelled", "inactive"], {
+			required_error:
+				"Status is required and must be one of the following: active, inactive, cancelled or done",
+		}),
+	}),
+})
+
+export const getAllShowtimeSchema = querySchema.shape.query.extend({
+	append_to_response: z.string().optional(),
+})
+
 export type CreateShowtimeInput = z.infer<typeof createShowtimeSchema>["body"]
 export type GetShowtimeInput = z.infer<typeof getShowtimeSchema>["params"]
 export type UpdateShowtimeInput = z.infer<typeof updateShowtimeSchema>
+export type UpdateShowtimeStatusInput = z.infer<
+	typeof updateShowtimeStatusSchema
+>
+export type GetAllShowtimeInput = z.infer<typeof getAllShowtimeSchema>

@@ -36,9 +36,19 @@ export const createMovieSchema = z.object({
 				errorMap: () => ({ message: "Genre should be an array of genre ids" }),
 			}
 		),
-		runtime: z
-			.string({ required_error: "Runtime is required" })
-			.min(1, "Runtime is required")
+		runtime: z.coerce
+			.number({
+				required_error: "Runtime is required",
+			})
+			.positive("Runtime can only be a positive number"),
+		origin_country: z
+			.string({ required_error: "Origin country is required" })
+			.min(1, "Origin country is required")
+			.trim(),
+		trailer_link: z
+			.string({ required_error: "Trailer link is required" })
+			.min(1, "Trailer link is required")
+			.url("Invalid URL")
 			.trim(),
 		director: z
 			.string({ required_error: "Director is required" })

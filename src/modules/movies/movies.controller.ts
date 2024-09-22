@@ -60,7 +60,10 @@ export const createMovieHandler = async (
 		return res.status(HttpStatusCode.CREATED).json({
 			success: true,
 			message: "Movie added successfully!",
-			data: movie,
+			data: {
+				...movie,
+				genre_ids,
+			},
 		})
 	} catch (error) {
 		return next(error)
@@ -98,7 +101,10 @@ export const updateMovieHandler = async (
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "Movie updated successfully!",
-			data: movie,
+			data: {
+				...movie,
+				genre_ids,
+			},
 		})
 	} catch (error) {
 		return next(error)
@@ -163,11 +169,11 @@ export const getAllMoviesHandler = async (
 		const { page: requested_page, genre } = req.query
 
 		const page = Number(requested_page) || 1
-		const limit = 15
+		const limit = 20
 
 		const movies = await getMovies({
 			genreId: genre,
-			page,
+			limit,
 		})
 		const total = await totalMovies(genre)
 
@@ -176,12 +182,10 @@ export const getAllMoviesHandler = async (
 			message: "All movies retrieved successfully!",
 			data: movies,
 			meta: {
-				total: Number(total),
-				current_page: page,
+				page: page,
 				per_page: limit,
+				total: Number(total),
 				total_pages: Math.ceil(total / limit) || 1,
-				has_next_page: page < Math.ceil(total / limit),
-				has_prev_page: page > 1,
 			},
 		})
 	} catch (error) {

@@ -4,20 +4,28 @@ import {
 	createShowtimeHandler,
 	deleteShowtimeHandler,
 	getAllShowtimeHandler,
+	getShowtimeAvailableSeatsHandler,
 	getShowtimeHandler,
 	updateShowtimeHandler,
+	updateShowtimeStatusHandler,
 } from "./showtime.controller"
 import {
 	createShowtimeSchema,
 	getShowtimeSchema,
 	updateShowtimeSchema,
+	updateShowtimeStatusSchema,
 } from "./showtime.schema"
 
 export default (router: Router) => {
 	/*
+	 * GET route to fetch all showtime
+	 */
+	router.get("/showtime", getAllShowtimeHandler)
+
+	/*
 	 * POST route to create new showtime (admins)
 	 */
-	router.get(
+	router.post(
 		"/showtime",
 		[validateResource(createShowtimeSchema)],
 		createShowtimeHandler
@@ -27,7 +35,7 @@ export default (router: Router) => {
 	 * PUT route to update showtime (admins)
 	 */
 	router.put(
-		"/showtime",
+		"/showtime/:id",
 		[validateResource(updateShowtimeSchema)],
 		updateShowtimeHandler
 	)
@@ -44,14 +52,27 @@ export default (router: Router) => {
 	/*
 	 * GET route to fetch showtime
 	 */
-	router.delete(
+	router.get(
 		"/showtime/:id",
 		[validateResource(getShowtimeSchema)],
 		getShowtimeHandler
 	)
 
 	/*
-	 * GET route to fetch all showtime
+	 * PATCH route to update showtime status (admin)
 	 */
-	router.get("/showtime", getAllShowtimeHandler)
+	router.patch(
+		"/showtime/:id",
+		[validateResource(updateShowtimeStatusSchema)],
+		updateShowtimeStatusHandler
+	)
+
+	/*
+	 * GET route to get showtime available seats
+	 */
+	router.get(
+		"/showtime/:id/seats",
+		[validateResource(getShowtimeSchema)],
+		getShowtimeAvailableSeatsHandler
+	)
 }

@@ -72,7 +72,7 @@ export const getMovie = async ({ movieId }: { movieId?: string }) => {
 				SELECT
 					movies.id, movies.title, movies.tagline, movies.slug, movies.overview,
 					movies.release_date, movies.poster_image_url, movies.homepage,
-					movies.runtime, movies.director, ARRAY_AGG(genres.name) AS genres, movies.created_at, movies.updated_at
+					movies.runtime, movies.director, movies.origin_country, movies.trailer_link, JSON_AGG(JSONB_BUILD_OBJECT('id', genres.id, 'name', genres.name)) AS genres, movies.created_at, movies.updated_at
 				FROM
 						movies
 				JOin
@@ -81,7 +81,9 @@ export const getMovie = async ({ movieId }: { movieId?: string }) => {
 						genres ON movie_genres.genre_id = genres.id
 				${movieId ? sql`WHERE movies.id = ${movieId}` : sql``}
 				GROUP BY
-						movies.id;
+					movies.id
+				ORDER BY
+					movie.id DESC
 		`
 	return movie
 }
@@ -90,8 +92,8 @@ export const getMovie = async ({ movieId }: { movieId?: string }) => {
 export const getMovies = async ({
 	lastMovieId,
 	genreId,
-	page,
-}: { lastMovieId?: string; genreId?: string; page: number }) => {
+	limit,
+}: { lastMovieId?: string; genreId?: string; limit: number }) => {
 	const movies = sql`
 				SELECT
 					movies.id, movies.title, movies.tagline, movies.slug, movies.overview,
@@ -104,13 +106,12 @@ export const getMovies = async ({
 				JOIN
 					genres ON movie_genres.genre_id = genres.id
 					-- use last movie id here but also check if the genre id is passed
-				-- ${lastMovieId && page > 1 ? sql`WHERE movies.id < ${lastMovieId}` : sql``}
 				${genreId ? sql`AND genres.id = ${genreId}` : sql``}
 				GROUP BY
 					movies.id
 				ORDER BY
 					movies.created_at DESC
-				LIMIT 15;
+				LIMIT ${limit};
 		`
 
 	return movies

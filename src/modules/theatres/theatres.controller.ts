@@ -1,10 +1,12 @@
 import type { NextFunction, Request, Response } from "express"
-import { nanoid } from "nanoid"
+import { PAGE_SIZE } from "../../constants/api"
 import { sql } from "../../db"
 import { ApiError } from "../../exceptions/api-error"
+import { generateCustomId } from "../../libs/generate"
 import { HttpStatusCode } from "../../utils/status-codes"
 import type {
 	CreateTheatreInput,
+	GetAllTheatreInput,
 	GetTheatreInput,
 	UpdateTheatreInput,
 } from "./theatres.schema"
@@ -19,20 +21,17 @@ export const createTheatreHandler = async (
 		const { name, capacity } = req.body
 
 		const data = await sql`SELECT name FROM theatres WHERE name = ${name}`
-		if (!data.length) {
-			throw new ApiError(
-				"Theatre with name already exists!",
-				HttpStatusCode.CONFLICT
-			)
+		if (data.length) {
+			throw new ApiError("Theatre already exists!", HttpStatusCode.CONFLICT)
 		}
 
-		const room_id = `room_${nanoid(10)}`
+		const room_id = generateCustomId()
 		const theatre =
 			await sql`INSERT INTO theatres (name, capacity, room_id) VALUES (${name}, ${capacity}, ${room_id}) RETURNING *`
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "Theatre created successfully!",
-			data: theatre,
+			data: theatre.at(0),
 		})
 	} catch (error) {
 		return next(error)
@@ -69,7 +68,7 @@ export const updateTheatreHandler = async (
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "Theatre updated successfully!",
-			data: theatre,
+			data: theatre.at(0),
 		})
 	} catch (error) {
 		return next(error)
@@ -89,13 +88,7 @@ export const deleteTheatreHandler = async (
 			throw new ApiError("Theatre does not exist!", HttpStatusCode.NOT_FOUND)
 		}
 
-		const theatre = await sql`DELETE FROM theatres WHERE id = ${id}`
-		if (!theatre.length) {
-			throw new ApiError(
-				"Error deleting theatre, please try again later!",
-				HttpStatusCode.NOT_FOUND
-			)
-		}
+		await sql`DELETE FROM theatres WHERE id = ${id}`
 
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
@@ -114,7 +107,8 @@ export const getTheatreHandler = async (
 	try {
 		const { id } = req.params
 
-		const data = await getTheatreWithId(id)
+		const data =
+			await sql`SELECT id, name, capacity, room_id FROM theatres WHERE id = ${id}`
 		if (!data.length) {
 			throw new ApiError("Theatre does not exist!", HttpStatusCode.NOT_FOUND)
 		}
@@ -122,7 +116,7 @@ export const getTheatreHandler = async (
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "Theatre fetched successfully!",
-			data: data[0],
+			data: data.at(0),
 		})
 	} catch (error) {
 		return next(error)
@@ -130,17 +124,27 @@ export const getTheatreHandler = async (
 }
 
 export const getAllTheatreHandler = async (
-	req: Request,
+	req: Request<unknown, unknown, unknown, GetAllTheatreInput>,
 	res: Response,
 	next: NextFunction
 ) => {
 	try {
-		const theatre = await sql`SELECT * FROM theatres`
+		const { page = 1 } = req.query
+		const theatre = await sql`SELECT id, name, capacity, room_id FROM theatres`
+
+		const count = await sql`SELECT COUNT(*) FROM theatres`
+		const total = count.at(0)?.count
 
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "Theatres fetched successfully!",
 			data: theatre,
+			meta: {
+				page: page,
+				per_page: PAGE_SIZE,
+				total: Number(total),
+				total_pages: Math.ceil(total / PAGE_SIZE) || 0,
+			},
 		})
 	} catch (error) {
 		return next(error)
