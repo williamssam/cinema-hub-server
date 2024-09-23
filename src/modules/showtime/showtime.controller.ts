@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express"
 import { PAGE_SIZE } from "../../constants/api"
 import { sql } from "../../db"
 import { ApiError } from "../../exceptions/api-error"
+import type { QueryInput } from "../../libs/resuable-schema"
 import { HttpStatusCode } from "../../utils/status-codes"
 import { getMovieWithId } from "../movies/movies.service"
 import { getTheatreWithId } from "../theatres/theatres.service"
@@ -13,7 +14,6 @@ import type {
 	UpdateShowtimeStatusInput,
 } from "./showtime.schema"
 import { getShowtime, getShowtimeWithId } from "./showtime.service"
-
 
 /**
  * @description Create a new showtime
@@ -201,11 +201,11 @@ export const getShowtimeHandler = async (
 }
 
 /**
- * @description Fetch all showtimes
+ * @description Fetch all showtime
  * @route GET /showtime
  * @param {number} [page.query] - The page number to fetch
  * @param {string} [append_to_response.query] - A comma-separated list of fields to include in the response. Valid values are 'movie' and 'theatre'
- * @returns {object} - The list of showtimes, with the requested fields included, and pagination metadata
+ * @returns {object} - The list of showtime, with the requested fields included, and pagination metadata
  * @throws {ApiError} - If the request fails
  */
 export const getAllShowtimeHandler = async (
@@ -268,6 +268,87 @@ export const updateShowtimeStatusHandler = async (
 			success: true,
 			message: "Showtime status updated successfully!",
 			data: data.at(0),
+		})
+	} catch (error) {
+		return next(error)
+	}
+}
+
+/**
+ * @description Fetch all upcoming showtime
+ * @route GET /showtime/upcoming
+ * @param {number} [page.query] - The page number to fetch
+ * @param {string} [append_to_response.query] - A comma-separated list of fields to include in the response. Valid values are 'movie' and 'theatre'
+ * @returns {object} - The list of upcoming showtime, with the requested fields included, and pagination metadata
+ * @throws {ApiError} - If the request fails
+ */
+export const getUpcomingShowtimeController = async (
+	req: Request<unknown, unknown, unknown, QueryInput>,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const { page, append_to_response } = req.query
+
+		const movie = append_to_response?.includes("movie")
+		const theatre = append_to_response?.includes("theatre")
+
+		const showtime = await sql`
+				SELECT
+				showtime.id,
+				showtime.end_time,
+				showtime.start_time,
+				showtime.available_seats,
+				showtime.price / 100 as price,
+				showtime.status,
+				${
+					movie
+						? sql`JSONB_BUILD_OBJECT(
+					'id', movies.id,
+					'title', movies.title,
+					'overview', movies.overview,
+					'poster_image_url',
+					movies.poster_image_url,
+					'runtime', movies.runtime) AS movie`
+						: sql`showtime.movie_id`
+				},
+				${
+					theatre
+						? sql`JSONB_BUILD_OBJECT(
+					'id', theatres.id,
+					'name', theatres.name,
+					'capacity', theatres.capacity,
+					'room_id', theatres.room_id) AS theatre`
+						: sql`showtime.theatre_id`
+				},
+				showtime.created_at,
+				showtime.updated_at
+			FROM
+					showtime
+			WHERE start_time >= NOW()
+			JOIN
+				theatres ON showtime.theatre_id = theatres.id
+			JOIN
+				movies ON showtime.movie_id = movies.id
+			GROUP BY
+				showtime.id, theatres.id, movies.id
+			ORDER BY
+				start_time ASC
+		`
+		const count =
+			await sql`SELECT count(*) FROM showtime WHERE start_time >= NOW()`
+		const total = count.at(0)?.count
+
+		return res.status(HttpStatusCode.OK).json({
+			success: true,
+			message: "Showtime fetched successfully!",
+			data: showtime,
+			meta: {
+				page: page,
+				per_page: PAGE_SIZE,
+				total: Number(total),
+				total_pages: Math.ceil(total / PAGE_SIZE) || 0,
+			},
 		})
 	} catch (error) {
 		return next(error)

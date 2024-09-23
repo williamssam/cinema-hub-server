@@ -1,4 +1,5 @@
 import type { Router } from "express"
+import { querySchema } from "../../libs/resuable-schema"
 import { validateResource } from "../../middlewares/validate-resource"
 import {
 	createShowtimeHandler,
@@ -6,6 +7,7 @@ import {
 	getAllShowtimeHandler,
 	getShowtimeAvailableSeatsHandler,
 	getShowtimeHandler,
+	getUpcomingShowtimeController,
 	updateShowtimeHandler,
 	updateShowtimeStatusHandler,
 } from "./showtime.controller"
@@ -18,7 +20,7 @@ import {
 
 export default (router: Router) => {
 	/*
-	 * GET route to fetch all showtime
+	 * GET route to fetch all showtime (both admins and users)
 	 */
 	router.get("/showtime", getAllShowtimeHandler)
 
@@ -50,7 +52,7 @@ export default (router: Router) => {
 	)
 
 	/*
-	 * GET route to fetch showtime
+	 * GET route to fetch showtime (both admins and users)
 	 */
 	router.get(
 		"/showtime/:id",
@@ -68,11 +70,20 @@ export default (router: Router) => {
 	)
 
 	/*
-	 * GET route to get showtime available seats
+	 * GET route to get showtime available seats (might change this to return array of seats)
 	 */
 	router.get(
 		"/showtime/:id/seats",
 		[validateResource(getShowtimeSchema)],
 		getShowtimeAvailableSeatsHandler
+	)
+
+	/*
+	 * GET route to get upcoming showtime (users)
+	 */
+	router.get(
+		"/showtime/upcoming",
+		[validateResource(querySchema)],
+		getUpcomingShowtimeController
 	)
 }

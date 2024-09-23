@@ -21,7 +21,7 @@ export const validateResource =
 				const errorMessage = error.errors.map(err => ({
 					message: err.message,
 					path: err.path[1],
-					...(config.environment.IS_DEV && { code: err.code }),
+					...(config.IS_DEV && { code: err.code }),
 				}))
 
 				return res.status(HttpStatusCode.BAD_REQUEST).json({

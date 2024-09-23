@@ -67,9 +67,9 @@ export const updateShowtimeSchema = z.object({
 export const updateShowtimeStatusSchema = z.object({
 	...getShowtimeSchema.shape,
 	body: z.object({
-		status: z.enum(["active", "done", "cancelled", "inactive"], {
+		status: z.enum(["active", "done", "cancelled", "pending"], {
 			required_error:
-				"Status is required and must be one of the following: active, inactive, cancelled or done",
+				"Status is required and must be one of the following: active, pending, cancelled or done",
 		}),
 	}),
 })

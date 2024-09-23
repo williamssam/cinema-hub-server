@@ -1,4 +1,5 @@
 import type { Router } from "express";
+import { querySchema } from "../../libs/resuable-schema"
 import { validateResource } from "../../middlewares/validate-resource"
 import {
 	createMovieHandler,
@@ -6,6 +7,7 @@ import {
 	getAllMoviesHandler,
 	getMovieGenresController,
 	getMovieHandler,
+	getMovieShowtimeController,
 	updateMovieHandler,
 } from "./movies.controller"
 import {
@@ -16,17 +18,17 @@ import {
 
 export default (router: Router) => {
 	/*
-	 * GET route to fetch movies genre
+	 * GET route to fetch movies genre (both admins and users)
 	 */
 	router.get("/movies/genre", getMovieGenresController)
 
 	/*
-	 * GET route to fetch all movies
+	 * GET route to fetch all movies (both admins and users)
 	 */
 	router.get("/movies", getAllMoviesHandler)
 
 	/*
-	 * POST route to create a new movie
+	 * POST route to create a new movie (admins only)
 	 */
 	router.post(
 		"/movies",
@@ -35,7 +37,7 @@ export default (router: Router) => {
 	)
 
 	/*
-	 * PUT route to update movie
+	 * PUT route to update movie (admins only)
 	 */
 	router.put(
 		"/movies/:id",
@@ -44,7 +46,7 @@ export default (router: Router) => {
 	)
 
 	/*
-	 * DELETE route to delete a movie
+	 * DELETE route to delete a movie (admins only)
 	 */
 	router.delete(
 		"/movies/:id",
@@ -53,7 +55,16 @@ export default (router: Router) => {
 	)
 
 	/*
-	 * GET route to fetch movie
+	 * GET route to fetch movie (both admins and users)
 	 */
 	router.get("/movies/:id", [validateResource(getMovieSchema)], getMovieHandler)
+
+	/*
+	 * GET route to fetch movie showtime (upcoming) (both admins and users)
+	 */
+	router.get(
+		"/movies/:id/showtime",
+		[validateResource(querySchema)],
+		getMovieShowtimeController
+	)
 };

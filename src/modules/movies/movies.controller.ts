@@ -1,6 +1,8 @@
 import type { NextFunction, Request, Response } from "express"
+import { PAGE_SIZE } from "../../constants/api"
 import { sql } from "../../db"
 import { ApiError } from "../../exceptions/api-error"
+import type { QueryInput } from "../../libs/resuable-schema"
 import { HttpStatusCode } from "../../utils/status-codes"
 import type {
 	CreateMovieInput,
@@ -18,6 +20,12 @@ import {
 	updateMovieTransaction,
 } from "./movies.service"
 
+/**
+ * @description Fetch all movie genres
+ * @route GET /movies/genres
+ * @returns {object} - The list of movie genres
+ * @throws {ApiError} - If something went wrong, please try again
+ */
 export const getMovieGenresController = async (
 	req: Request,
 	res: Response,
@@ -36,6 +44,14 @@ export const getMovieGenresController = async (
 	}
 }
 
+/**
+ * @description Create a new movie
+ * @route POST /movies
+ * @param {CreateMovieInput} body - The movie data
+ * @returns {object} - The created movie
+ * @throws {ApiError} - If the genre ID does not exist
+ * @throws {ApiError} - If something went wrong, please try again
+ */
 export const createMovieHandler = async (
 	req: Request<unknown, unknown, CreateMovieInput>,
 	res: Response,
@@ -70,6 +86,15 @@ export const createMovieHandler = async (
 	}
 }
 
+/**
+ * @description Update a movie with the given id
+ * @route PUT /movies/:id
+ * @param {string} id.path - The id of the movie to update
+ * @param {CreateMovieInput} body - The movie data to update
+ * @returns {object} - The updated movie
+ * @throws {ApiError} - If the movie or genre does not exist
+ * @throws {ApiError} - If something went wrong, please try again
+ */
 export const updateMovieHandler = async (
 	req: Request<UpdateMovieInput["params"], unknown, UpdateMovieInput["body"]>,
 	res: Response,
@@ -111,6 +136,13 @@ export const updateMovieHandler = async (
 	}
 }
 
+/**
+ * @description Delete a single movie with the given id
+ * @route DELETE /movies/:id
+ * @param {string} id.path - The id of the movie to delete
+ * @returns {object} - Success message
+ * @throws {ApiError} - If the movie does not exist
+ */
 export const deleteMovieHandler = async (
 	req: Request<GetMovieInput>,
 	res: Response,
@@ -134,7 +166,13 @@ export const deleteMovieHandler = async (
 	}
 }
 
-
+/**
+ * @description Fetch a single movie with the given id
+ * @route GET /movies/:id
+ * @param {string} id.path - The id of the movie to fetch
+ * @returns {object} - The movie with the given id
+ * @throws {ApiError} - If the movie does not exist
+ */
 export const getMovieHandler = async (
 	req: Request<GetMovieInput>,
 	res: Response,
@@ -186,6 +224,93 @@ export const getAllMoviesHandler = async (
 				per_page: limit,
 				total: Number(total),
 				total_pages: Math.ceil(total / limit) || 1,
+			},
+		})
+	} catch (error) {
+		return next(error)
+	}
+}
+
+/**
+ * @description Fetch all upcoming showtimes for a movie
+ * @route GET /movies/:id/showtime
+ * @param {number} [page.query] - The page number to fetch
+ * @param {string} [append_to_response.query] - A comma-separated list of fields to include in the response. Valid values are 'movie' and 'theatre'
+ * @returns {object} - The list of showtime, with the requested fields included, and pagination metadata
+ * @throws {ApiError} - If the request fails
+ */
+export const getMovieShowtimeController = async (
+	req: Request<GetMovieInput, unknown, unknown, QueryInput>,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const { id } = req.params
+		const { page = 1, append_to_response } = req.query
+
+		const data = await getMovieWithId(id)
+		if (!data.length) {
+			throw new ApiError("Movie does not exist", HttpStatusCode.NOT_FOUND)
+		}
+
+		const movie = append_to_response?.includes("movie")
+		const theatre = append_to_response?.includes("theatre")
+
+		const showtime = await sql`
+				SELECT
+				showtime.id,
+				showtime.end_time,
+				showtime.start_time,
+				showtime.available_seats,
+				showtime.price / 100 as price,
+				showtime.status,
+				${
+					movie
+						? sql`JSONB_BUILD_OBJECT(
+					'id', movies.id,
+					'title', movies.title,
+					'overview', movies.overview,
+					'poster_image_url',
+					movies.poster_image_url,
+					'runtime', movies.runtime) AS movie`
+						: sql`showtime.movie_id`
+				},
+				${
+					theatre
+						? sql`JSONB_BUILD_OBJECT(
+					'id', theatres.id,
+					'name', theatres.name,
+					'capacity', theatres.capacity,
+					'room_id', theatres.room_id) AS theatre`
+						: sql`showtime.theatre_id`
+				},
+				showtime.created_at,
+				showtime.updated_at
+			FROM
+					showtime
+			WHERE movie_id = ${id} AND start_time >= NOW()
+			JOIN
+				theatres ON showtime.theatre_id = theatres.id
+			JOIN
+				movies ON showtime.movie_id = movies.id
+			GROUP BY
+				showtime.id, theatres.id, movies.id
+			ORDER BY
+				start_time ASC
+		`
+		const count =
+			await sql`SELECT COUNT(*) FROM showtime WHERE movie_id = ${id} AND start_time >= NOW()`
+		const total = count.at(0)?.count
+
+		return res.status(HttpStatusCode.OK).json({
+			success: true,
+			message: "Movie showtime fetched successfully!",
+			data: showtime,
+			meta: {
+				page: page,
+				per_page: PAGE_SIZE,
+				total: Number(total),
+				total_pages: Math.ceil(total / PAGE_SIZE) || 0,
 			},
 		})
 	} catch (error) {

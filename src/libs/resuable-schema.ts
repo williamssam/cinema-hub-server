@@ -10,5 +10,8 @@ export const querySchema = z.object({
 				message: "Page can only be a number",
 			})
 			.catch(1),
+		append_to_response: z.string().optional(),
 	}),
 })
+
+export type QueryInput = z.infer<typeof querySchema>["query"]
