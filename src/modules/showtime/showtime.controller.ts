@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express"
 import { PAGE_SIZE } from "../../constants/api"
 import { sql } from "../../db"
 import { ApiError } from "../../exceptions/api-error"
+import { generateSeatNumbers } from "../../libs/generate"
 import type { QueryInput } from "../../libs/resuable-schema"
 import { HttpStatusCode } from "../../utils/status-codes"
 import { getMovieWithId } from "../movies/movies.service"
@@ -14,6 +15,7 @@ import type {
 	UpdateShowtimeStatusInput,
 } from "./showtime.schema"
 import { getShowtime, getShowtimeWithId } from "./showtime.service"
+import type { Showtime } from "./showtime.type"
 
 /**
  * @description Create a new showtime
@@ -77,7 +79,7 @@ export const createShowtimeHandler = async (
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "Showtime created successfully!",
-			data: showtime,
+			data: showtime.at(0),
 		})
 	} catch (error) {
 		return next(error)
@@ -362,6 +364,16 @@ export const getUpcomingShowtimeController = async (
  * @returns {object} - The available seats of the showtime
  * @throws {ApiError} - If the showtime does not exist, or if the request fails
  */
+
+/**
+ * @description Get the available seats of a single showtime
+ * @route GET /showtime/:id/available-seats
+ * @param {string} id.path - The id of the showtime to fetch
+ * @returns {object} - The available seats of the showtime
+ * @property {number} total_seats - The total number of seats of the theatre
+ * @property {string[]} available_seats - The available seats of the showtime
+ * @throws {ApiError} - If the showtime does not exist, or if the request fails
+ */
 export const getShowtimeAvailableSeatsHandler = async (
 	req: Request<GetShowtimeInput>,
 	res: Response,
@@ -375,13 +387,45 @@ export const getShowtimeAvailableSeatsHandler = async (
 			throw new ApiError("Showtime does not exist", HttpStatusCode.NOT_FOUND)
 		}
 
-		const data =
-			await sql`SELECT available_seats FROM showtime WHERE id = ${id}`
+		const theatre_id = showtime.at(0)?.theatre_id
+		if (!theatre_id) {
+			throw new ApiError("Theatre does not exist", HttpStatusCode.NOT_FOUND)
+		}
+		// get all reserved seats from reservation
+		const theatre =
+			await sql`SELECT capacity, seats_per_row FROM theatres WHERE id = ${theatre_id}`
+		const seats = generateSeatNumbers({
+			seatsPerRow: theatre.at(0)?.seats_per_row,
+			totalSeats: theatre.at(0)?.capacity,
+		})
+
+		// get seat numbers from reservation
+		const reservation =
+			await sql`SELECT seat_number FROM reservations WHERE showtime_id = ${id}`
+		const reservedSeats = seats.map(seat => {
+			// if seat number is not in reservation, it is available
+			const isReserved = reservation.some(reservationSeat => {
+				return reservationSeat.seat_number === seat
+			})
+
+			if (isReserved) return
+
+			return seat
+		})
+
+		const data = await sql<
+			Pick<Showtime, "available_seats">[]
+		>`SELECT available_seats FROM showtime WHERE id = ${id}`
+
+		const total_seats = data.at(0)?.available_seats
 
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "Showtime available seats fetched successfully!",
-			data: data.at(0),
+			data: {
+				total_seats,
+				available_seats: reservedSeats,
+			},
 		})
 	} catch (error) {
 		return next(error)

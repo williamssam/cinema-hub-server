@@ -4,6 +4,7 @@ export type Showtime = {
 		theatre_id: number
 		start_time: string
 		end_time: string
+		available_seats: number
 		price: number
 		status: "pending" | "active" | "done" | "cancelled"
 		created_at: Date

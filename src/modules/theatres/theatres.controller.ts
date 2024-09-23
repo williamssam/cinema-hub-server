@@ -18,16 +18,18 @@ export const createTheatreHandler = async (
 	next: NextFunction
 ) => {
 	try {
-		const { name, capacity } = req.body
+		const { name } = req.body
 
 		const data = await sql`SELECT name FROM theatres WHERE name = ${name}`
 		if (data.length) {
 			throw new ApiError("Theatre already exists!", HttpStatusCode.CONFLICT)
 		}
 
-		const room_id = generateCustomId()
-		const theatre =
-			await sql`INSERT INTO theatres (name, capacity, room_id) VALUES (${name}, ${capacity}, ${room_id}) RETURNING *`
+		const payload = {
+			...req.body,
+			room_id: generateCustomId(),
+		}
+		const theatre = await sql`INSERT INTO theatres ${sql(payload)} RETURNING *`
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "Theatre created successfully!",
@@ -49,7 +51,6 @@ export const updateTheatreHandler = async (
 ) => {
 	try {
 		const { id } = req.params
-		const { capacity, name } = req.body
 
 		const data = await getTheatreWithId(id)
 		if (!data.length) {
@@ -57,7 +58,7 @@ export const updateTheatreHandler = async (
 		}
 
 		const theatre =
-			await sql`UPDATE theatres SET name = ${name}, capacity = ${capacity} WHERE id = ${id} RETURNING *`
+			await sql`UPDATE theatres SET ${sql(req.body)} WHERE id = ${id} RETURNING *`
 		if (!theatre.length) {
 			throw new ApiError(
 				"Error updating theatre, please try again later!",
