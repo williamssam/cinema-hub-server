@@ -11,6 +11,7 @@ import {
 	verifyRefreshJWT,
 } from "./users.methods"
 import type {
+	ChangePasswordInput,
 	CreateUserInput,
 	LoginInput,
 	RefreshTokenInput,
@@ -23,31 +24,37 @@ export const createUserHandler = async (
 	next: NextFunction
 ) => {
 	try {
-		const { email, name, password, role } = req.body
+		const { email, name, password, role_id } = req.body
 
 		// Check if user with this email exits
 		const data = await sql`SELECT email FROM users WHERE email = ${email}`
 		if (data.length) {
-			throw new ApiError(
-				"User with this email already exists",
-				HttpStatusCode.CONFLICT
-			)
+			throw new ApiError("User already exists", HttpStatusCode.CONFLICT)
+		}
+
+		const role = await sql`SELECT id FROM roles WHERE id = ${role_id}`
+		if (!role.length) {
+			throw new ApiError("Role does not exist", HttpStatusCode.NOT_FOUND)
 		}
 
 		// Hash password
 		const password_hash = await hashPassword({ user_password: password })
 		const user = await sql`
-				INSERT INTO users
-					(email, name, password, role)
-				VALUES
-					(${email}, ${name}, ${password_hash}, ${role})
-				RETURNING id, email, name
+				WITH new_user AS (
+					INSERT INTO users
+					(email, name, password, role_id)
+					VALUES
+						(${email}, ${name}, ${password_hash}, ${role_id})
+					RETURNING *
+				) SELECT
+					new_user.id, new_user.email, new_user.name, JSONB_BUILD_OBJECT('id', roles.id, 'name', roles.name) AS role
+					FROM new_user JOIN roles ON new_user.role_id = roles.id;
 			`
 
 		return res.status(HttpStatusCode.CREATED).json({
 			success: true,
 			message: "User created successfully!",
-			data: user,
+			data: user.at(0),
 		})
 	} catch (error) {
 		return next(error)
@@ -62,24 +69,36 @@ export const loginHandler = async (
 	try {
 		const { email, password } = req.body
 
-		const user = await sql<
-			User[]
-		>`SELECT id, email, password FROM users WHERE email = ${email}`
+		const user = await sql<User[]>`
+			SELECT
+				users.id,
+				users.email,
+				users.name,
+				users.password,
+				users.last_login,
+				JSONB_BUILD_OBJECT('id', roles.id, 'name', roles.name) AS role
+			FROM
+					users
+			JOIN
+					roles ON users.role_id = roles.id
+			WHERE
+					users.email = ${email};
+		`
 		if (!user.length) {
 			throw new ApiError(
 				"Invalid email address or password",
-				HttpStatusCode.CONFLICT
+				HttpStatusCode.NOT_FOUND
 			)
 		}
 
-		const isValidPassword = await verifyHashedPassword({
+		const password_valid = await verifyHashedPassword({
 			password_hash: user[0]?.password,
 			user_password: password,
 		})
-		if (!isValidPassword) {
+		if (!password_valid) {
 			throw new ApiError(
 				"Invalid email address or password",
-				HttpStatusCode.UNAUTHORIZED
+				HttpStatusCode.BAD_REQUEST
 			)
 		}
 
@@ -90,7 +109,7 @@ export const loginHandler = async (
 
 		if (refresh_token) {
 			//  FIXME: hash the refresh token before storing in DB
-			await sql`INSERT INTO users (refresh_token) VALUES (${refresh_token})`
+			await sql`UPDATE users SET refresh_token = ${refresh_token}, last_login = ${sql`now()`} WHERE id = ${rest.id}`
 		}
 
 		res.status(HttpStatusCode.OK).json({
@@ -107,13 +126,75 @@ export const loginHandler = async (
 	}
 }
 
+// export const updateUserHandler = async (
+// 	req: Request<unknown, unknown, UpdateUserInput>,
+// 	res: Response,
+// 	next: NextFunction
+// ) => {
+// 	try {
+// 		const id = res.locals.user.user.id
+
+// 		// const user = await getUserByEmail({ email })
+// 		// if (!user.length) {
+// 		// 	throw new ApiError("User does not exist", HttpStatusCode.NOT_FOUND)
+// 		// }
+
+// 		const data =
+// 			await sql`UPDATE users SET ${sql(req.body)} WHERE id = ${id} RETURNING id, name, email`
+
+// 		return res.status(HttpStatusCode.OK).json({
+// 			success: true,
+// 			message: "User updated successfully!",
+// 			data: data.at(0),
+// 		})
+// 	} catch (error) {}
+// }
+
+export const changePasswordHandler = async (
+	req: Request<unknown, unknown, ChangePasswordInput>,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const id = res.locals.payload.user.id
+		const { old_password, new_password } = req.body
+
+		const user = await sql<
+			Pick<User, "password">[]
+		>`SELECT password FROM users WHERE id = ${id}`
+		if (!user.length) {
+			throw new ApiError("User does not exist", HttpStatusCode.NOT_FOUND)
+		}
+
+		const password_valid = await verifyHashedPassword({
+			password_hash: user.at(0)?.password as string,
+			user_password: old_password,
+		})
+		if (!password_valid) {
+			throw new ApiError(
+				"Old password is incorrect",
+				HttpStatusCode.BAD_REQUEST
+			)
+		}
+
+		const password_hash = await hashPassword({ user_password: new_password })
+		await sql`UPDATE users SET password = ${password_hash} WHERE id = ${id}`
+		return res.status(HttpStatusCode.OK).json({
+			success: true,
+			message: "Password changed successfully!",
+		})
+	} catch (error) {
+		return next(error)
+	}
+}
+
 export const getCurrentUserHandler = async (
 	req: Request,
 	res: Response,
 	next: NextFunction
 ) => {
 	try {
-		const { user } = res.locals.user
+		const { user } = res.locals.payload
 		res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "User fetched successfully",
@@ -159,7 +240,7 @@ export const refreshTokenHandler = async (
 		const id = payload?.decoded?.id
 		const user = await sql<
 			Omit<User, "password">[]
-		>`SELECT id, refresh_token, name, email FROM users WHERE id = ${id}`
+		>`SELECT users.id, users.refresh_token, users.name, users.email, JSONB_BUILD_OBJECT('id', roles.id, 'name', roles.name) AS role FROM users JOIN roles ON roles.id = users.role_id WHERE users.id = ${id}`
 		if (!user.length) {
 			throw new ApiError("User does not exist!", HttpStatusCode.NOT_FOUND)
 		}
@@ -178,6 +259,24 @@ export const refreshTokenHandler = async (
 				access_token,
 				refresh_token,
 			},
+		})
+	} catch (error) {
+		return next(error)
+	}
+}
+
+export const getUserRolesHandler = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const roles = await sql`SELECT id, name FROM roles`
+
+		return res.status(HttpStatusCode.OK).json({
+			success: true,
+			message: "User roles retrieved successfully!",
+			data: roles,
 		})
 	} catch (error) {
 		return next(error)

@@ -1,7 +1,6 @@
 import { hash, verify } from "@node-rs/argon2"
 import jwt from "jsonwebtoken"
 import { config } from "../../config/configuration"
-import { log } from "../../utils/logger"
 
 type HashedPassword = {
 	user_password: string
@@ -32,7 +31,7 @@ export const verifyHashedPassword = async ({
 			parallelism: 1,
 		})
 	} catch (error) {
-		log.error("Error verifying password", error)
+		console.error("Password verification error", error)
 	}
 }
 
@@ -42,7 +41,7 @@ export const signAccessJWT = (payload: Object) => {
 			expiresIn: config.access_token.expires_in,
 		})
 	} catch (error) {
-		console.log("JWT sign error", error)
+		console.error("JWT sign error", error)
 	}
 }
 
@@ -67,8 +66,8 @@ export const verifyAccessJWT = async (
 
 export const signRefreshJWT = (payload: Object) => {
 	try {
-		return jwt.sign(payload, config.access_token.key, {
-			expiresIn: config.access_token.expires_in,
+		return jwt.sign(payload, config.refresh_token.key, {
+			expiresIn: config.refresh_token.expires_in,
 		})
 	} catch (error) {
 		console.log("JWT sign error", error)
@@ -80,7 +79,7 @@ export const verifyRefreshJWT = async (
 	options?: jwt.VerifyOptions
 ) => {
 	try {
-		const decoded = jwt.verify(token, config.access_token.key, options)
+		const decoded = jwt.verify(token, config.refresh_token.key, options)
 
 		return {
 			is_valid: true,

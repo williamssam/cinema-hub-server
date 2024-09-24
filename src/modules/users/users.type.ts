@@ -1,12 +1,24 @@
 
+export type Role = {
+	id: number
+	name: string
+}
 type User = {
 	id: number
 	email: string
 	name: string
 	password: string
 	refresh_token: string
-	role: "user" | "admin" | "super-admin"
+	role: Role
 }
 
-export type { User }
+type JWTPayload = {
+	payload: {
+		user: User
+		iat: number
+		exp: number
+	}
+}
+
+export type { JWTPayload, User }
 

@@ -12,11 +12,11 @@ export const config = {
 	SMTP_USERNAME: process.env.SMTP_USER,
 	SMTP_PASSWORD: process.env.SMTP_PASS,
 	access_token: {
-		key: process.env.ACCESS_TOKEN_KEY as string,
-		expires_in: "15m",
+		key: process.env.ACCESS_TOKEN_KEY,
+		expires_in: process.env.ACCESS_TOKEN_KEY_EXPIRES_IN,
 	},
 	refresh_token: {
-		key: process.env.REFRESH_TOKEN_KEY as string,
-		expires_in: "7days",
+		key: process.env.REFRESH_TOKEN_KEY,
+		expires_in: process.env.REFRESH_TOKEN_KEY_EXPIRES_IN,
 	},
 }

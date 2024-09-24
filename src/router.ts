@@ -2,6 +2,7 @@ import express from "express";
 import moviesRoutes from "./modules/movies/movies.routes";
 import showtimeRoutes from "./modules/showtime/showtime.routes"
 import theatresRoutes from "./modules/theatres/theatres.routes"
+import usersRoutes from "./modules/users/users.routes"
 import { HttpStatusCode } from "./utils/status-codes";
 
 const router = express.Router();
@@ -15,6 +16,7 @@ export default () => {
 	moviesRoutes(router)
 	theatresRoutes(router)
 	showtimeRoutes(router)
+	usersRoutes(router)
 
 	return router
 };

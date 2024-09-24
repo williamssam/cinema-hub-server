@@ -1,5 +1,8 @@
 import type { Router } from "express";
 import { querySchema } from "../../libs/resuable-schema"
+import { authorizeUser } from "../../middlewares/authorize-user"
+import { deserializeUser } from "../../middlewares/deserialize-user"
+import { requireUser } from "../../middlewares/require-user"
 import { validateResource } from "../../middlewares/validate-resource"
 import {
 	createMovieHandler,
@@ -25,14 +28,19 @@ export default (router: Router) => {
 	/*
 	 * GET route to fetch all movies (both admins and users)
 	 */
-	router.get("/movies", getAllMoviesHandler)
+	router.get("/movies", [deserializeUser, requireUser], getAllMoviesHandler)
 
 	/*
 	 * POST route to create a new movie (admins only)
 	 */
 	router.post(
-		"/movies",
-		[validateResource(createMovieSchema)],
+		"/admin/movies",
+		[
+			validateResource(createMovieSchema),
+			deserializeUser,
+			requireUser,
+			authorizeUser,
+		],
 		createMovieHandler
 	)
 
@@ -40,8 +48,13 @@ export default (router: Router) => {
 	 * PUT route to update movie (admins only)
 	 */
 	router.put(
-		"/movies/:id",
-		[validateResource(updateMovieSchema)],
+		"/admin/movies/:id",
+		[
+			validateResource(updateMovieSchema),
+			deserializeUser,
+			requireUser,
+			authorizeUser,
+		],
 		updateMovieHandler
 	)
 
@@ -49,22 +62,31 @@ export default (router: Router) => {
 	 * DELETE route to delete a movie (admins only)
 	 */
 	router.delete(
-		"/movies/:id",
-		[validateResource(getMovieSchema)],
+		"/admin/movies/:id",
+		[
+			validateResource(getMovieSchema),
+			deserializeUser,
+			requireUser,
+			authorizeUser,
+		],
 		deleteMovieHandler
 	)
 
 	/*
 	 * GET route to fetch movie (both admins and users)
 	 */
-	router.get("/movies/:id", [validateResource(getMovieSchema)], getMovieHandler)
+	router.get(
+		"/movies/:id",
+		[validateResource(getMovieSchema), deserializeUser, requireUser],
+		getMovieHandler
+	)
 
 	/*
 	 * GET route to fetch movie showtime (upcoming) (both admins and users)
 	 */
 	router.get(
 		"/movies/:id/showtime",
-		[validateResource(querySchema)],
+		[validateResource(querySchema), deserializeUser, requireUser],
 		getMovieShowtimeController
 	)
 };

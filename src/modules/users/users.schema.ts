@@ -13,11 +13,10 @@ export const createUserSchema = z.object({
 			.min(6, "Password too short - should be 6 characters minimum")
 			.max(30, "Password too long - should be 30 characters maximum")
 			.trim(),
-		role: z
-			.enum(["user", "admin", "super-admin"], {
-				errorMap: () => ({ message: "Invalid role" }),
-			})
-			.catch("user"),
+		role_id: z.coerce
+			.number({ required_error: "Role ID is required" })
+			.positive("Role ID must be a positive number")
+			.gte(0, "Role ID must be greater than 0"),
 	}),
 })
 
@@ -47,13 +46,30 @@ export const refreshTokenSchema = z.object({
 	}),
 })
 
+export const updateUserSchema = z.object({
+	body: z.object({
+		name: z.string({ required_error: "Name is required" }).trim(),
+	}),
+})
+export const changePasswordSchema = z.object({
+	body: z.object({
+		old_password: z
+			.string({
+				required_error: "Old password is required",
+			})
+			.min(6, "Old password must be at least 6 characters long")
+			.trim(),
+		new_password: z
+			.string({
+				required_error: "New password is required",
+			})
+			.min(6, "New password must be at least 6 characters long")
+			.trim(),
+	}),
+})
+
 export type CreateUserInput = z.TypeOf<typeof createUserSchema>["body"]
-// export type VerifyUserInput = z.TypeOf<typeof verifyUserSchema>["body"];
-// export type ChangePasswordInput = z.TypeOf<typeof changePasswordSchema>["body"];
-// export type ForgotPasswordInput = z.TypeOf<typeof forgotPasswordSchema>["body"];
 export type LoginInput = z.infer<typeof loginSchema>["body"]
-export type UpdateUserInput = Omit<
-	z.TypeOf<typeof createUserSchema>["body"],
-	"password"
->
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>["body"]
+export type UpdateUserInput = z.infer<typeof updateUserSchema>["body"]
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>["body"]

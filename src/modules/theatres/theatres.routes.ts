@@ -1,4 +1,7 @@
 import type { Router } from "express"
+import { authorizeUser } from "../../middlewares/authorize-user"
+import { deserializeUser } from "../../middlewares/deserialize-user"
+import { requireUser } from "../../middlewares/require-user"
 import { validateResource } from "../../middlewares/validate-resource"
 import {
 	createTheatreHandler,
@@ -17,14 +20,19 @@ export default (router: Router) => {
 	/*
 	 * GET route to fetch all theatres
 	 */
-	router.get("/theatres", getAllTheatreHandler)
+	router.get("/theatres", [deserializeUser, requireUser], getAllTheatreHandler)
 
 	/*
 	 * POST route to create new theatre
 	 */
 	router.post(
-		"/theatres",
-		[validateResource(createTheatreSchema)],
+		"/admin/theatres",
+		[
+			validateResource(createTheatreSchema),
+			deserializeUser,
+			requireUser,
+			authorizeUser,
+		],
 		createTheatreHandler
 	)
 
@@ -32,7 +40,7 @@ export default (router: Router) => {
 	 * PUT route to update existing theatre
 	 */
 	router.put(
-		"/theatres/:id",
+		"/admin/theatres/:id",
 		[validateResource(updateTheatreSchema)],
 		updateTheatreHandler
 	)
@@ -50,8 +58,13 @@ export default (router: Router) => {
 	 * DELETE route to fetch theatre
 	 */
 	router.delete(
-		"/theatres/:id",
-		[validateResource(getTheatreSchema)],
+		"/admin/theatres/:id",
+		[
+			validateResource(getTheatreSchema),
+			deserializeUser,
+			requireUser,
+			authorizeUser,
+		],
 		deleteTheatreHandler
 	)
 }
