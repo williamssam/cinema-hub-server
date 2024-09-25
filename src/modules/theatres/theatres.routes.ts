@@ -1,6 +1,6 @@
 import type { Router } from "express"
-import { authorizeUser } from "../../middlewares/authorize-user"
 import { deserializeUser } from "../../middlewares/deserialize-user"
+import { ensureAdmin } from "../../middlewares/ensure-admin"
 import { requireUser } from "../../middlewares/require-user"
 import { validateResource } from "../../middlewares/validate-resource"
 import {
@@ -26,12 +26,12 @@ export default (router: Router) => {
 	 * POST route to create new theatre
 	 */
 	router.post(
-		"/admin/theatres",
+		"/theatres",
 		[
 			validateResource(createTheatreSchema),
 			deserializeUser,
 			requireUser,
-			authorizeUser,
+			ensureAdmin,
 		],
 		createTheatreHandler
 	)
@@ -40,7 +40,7 @@ export default (router: Router) => {
 	 * PUT route to update existing theatre
 	 */
 	router.put(
-		"/admin/theatres/:id",
+		"/theatres/:id",
 		[validateResource(updateTheatreSchema)],
 		updateTheatreHandler
 	)
@@ -58,12 +58,12 @@ export default (router: Router) => {
 	 * DELETE route to fetch theatre
 	 */
 	router.delete(
-		"/admin/theatres/:id",
+		"/theatres/:id",
 		[
 			validateResource(getTheatreSchema),
 			deserializeUser,
 			requireUser,
-			authorizeUser,
+			ensureAdmin,
 		],
 		deleteTheatreHandler
 	)

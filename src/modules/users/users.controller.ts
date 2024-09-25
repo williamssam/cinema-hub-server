@@ -24,7 +24,7 @@ export const createUserHandler = async (
 	next: NextFunction
 ) => {
 	try {
-		const { email, name, password, role_id } = req.body
+		const { email, name, password, role } = req.body
 
 		// Check if user with this email exits
 		const data = await sql`SELECT email FROM users WHERE email = ${email}`
@@ -32,28 +32,19 @@ export const createUserHandler = async (
 			throw new ApiError("User already exists", HttpStatusCode.CONFLICT)
 		}
 
-		const role = await sql`SELECT id FROM roles WHERE id = ${role_id}`
-		if (!role.length) {
-			throw new ApiError("Role does not exist", HttpStatusCode.NOT_FOUND)
-		}
-
 		// Hash password
 		const password_hash = await hashPassword({ user_password: password })
 		const user = await sql`
-				WITH new_user AS (
-					INSERT INTO users
-					(email, name, password, role_id)
-					VALUES
-						(${email}, ${name}, ${password_hash}, ${role_id})
-					RETURNING *
-				) SELECT
-					new_user.id, new_user.email, new_user.name, JSONB_BUILD_OBJECT('id', roles.id, 'name', roles.name) AS role
-					FROM new_user JOIN roles ON new_user.role_id = roles.id;
+				INSERT INTO users
+					(email, name, password, role)
+				VALUES
+					(${email}, ${name}, ${password_hash}, ${role})
+				RETURNING *
 			`
 
 		return res.status(HttpStatusCode.CREATED).json({
 			success: true,
-			message: "User created successfully!",
+			message: "Account created successfully!",
 			data: user.at(0),
 		})
 	} catch (error) {
@@ -76,11 +67,9 @@ export const loginHandler = async (
 				users.name,
 				users.password,
 				users.last_login,
-				JSONB_BUILD_OBJECT('id', roles.id, 'name', roles.name) AS role
+				users.role
 			FROM
 					users
-			JOIN
-					roles ON users.role_id = roles.id
 			WHERE
 					users.email = ${email};
 		`
@@ -240,7 +229,7 @@ export const refreshTokenHandler = async (
 		const id = payload?.decoded?.id
 		const user = await sql<
 			Omit<User, "password">[]
-		>`SELECT users.id, users.refresh_token, users.name, users.email, JSONB_BUILD_OBJECT('id', roles.id, 'name', roles.name) AS role FROM users JOIN roles ON roles.id = users.role_id WHERE users.id = ${id}`
+		>`SELECT users.id, users.refresh_token, users.name, users.email, users.role FROM users WHERE users.id = ${id}`
 		if (!user.length) {
 			throw new ApiError("User does not exist!", HttpStatusCode.NOT_FOUND)
 		}

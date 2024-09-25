@@ -1,7 +1,7 @@
 -- Create the genres table
 CREATE TABLE IF NOT EXISTS genres (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(30) UNIQUE NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 

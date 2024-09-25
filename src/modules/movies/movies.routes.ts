@@ -1,7 +1,7 @@
 import type { Router } from "express";
 import { querySchema } from "../../libs/resuable-schema"
-import { authorizeUser } from "../../middlewares/authorize-user"
 import { deserializeUser } from "../../middlewares/deserialize-user"
+import { ensureAdmin } from "../../middlewares/ensure-admin"
 import { requireUser } from "../../middlewares/require-user"
 import { validateResource } from "../../middlewares/validate-resource"
 import {
@@ -34,12 +34,12 @@ export default (router: Router) => {
 	 * POST route to create a new movie (admins only)
 	 */
 	router.post(
-		"/admin/movies",
+		"/movies",
 		[
 			validateResource(createMovieSchema),
 			deserializeUser,
 			requireUser,
-			authorizeUser,
+			ensureAdmin,
 		],
 		createMovieHandler
 	)
@@ -48,12 +48,12 @@ export default (router: Router) => {
 	 * PUT route to update movie (admins only)
 	 */
 	router.put(
-		"/admin/movies/:id",
+		"/movies/:id",
 		[
 			validateResource(updateMovieSchema),
 			deserializeUser,
 			requireUser,
-			authorizeUser,
+			ensureAdmin,
 		],
 		updateMovieHandler
 	)
@@ -62,12 +62,12 @@ export default (router: Router) => {
 	 * DELETE route to delete a movie (admins only)
 	 */
 	router.delete(
-		"/admin/movies/:id",
+		"/movies/:id",
 		[
 			validateResource(getMovieSchema),
 			deserializeUser,
 			requireUser,
-			authorizeUser,
+			ensureAdmin,
 		],
 		deleteMovieHandler
 	)

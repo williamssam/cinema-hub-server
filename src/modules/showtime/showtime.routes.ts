@@ -1,5 +1,8 @@
 import type { Router } from "express"
 import { querySchema } from "../../libs/resuable-schema"
+import { deserializeUser } from "../../middlewares/deserialize-user"
+import { ensureAdmin } from "../../middlewares/ensure-admin"
+import { requireUser } from "../../middlewares/require-user"
 import { validateResource } from "../../middlewares/validate-resource"
 import {
 	createShowtimeHandler,
@@ -22,14 +25,19 @@ export default (router: Router) => {
 	/*
 	 * GET route to fetch all showtime (both admins and users)
 	 */
-	router.get("/showtime", getAllShowtimeHandler)
+	router.get("/showtime", [deserializeUser, requireUser], getAllShowtimeHandler)
 
 	/*
 	 * POST route to create new showtime (admins)
 	 */
 	router.post(
 		"/showtime",
-		[validateResource(createShowtimeSchema)],
+		[
+			validateResource(createShowtimeSchema),
+			deserializeUser,
+			requireUser,
+			ensureAdmin,
+		],
 		createShowtimeHandler
 	)
 
@@ -38,7 +46,12 @@ export default (router: Router) => {
 	 */
 	router.put(
 		"/showtime/:id",
-		[validateResource(updateShowtimeSchema)],
+		[
+			validateResource(updateShowtimeSchema),
+			deserializeUser,
+			requireUser,
+			ensureAdmin,
+		],
 		updateShowtimeHandler
 	)
 
@@ -47,7 +60,12 @@ export default (router: Router) => {
 	 */
 	router.delete(
 		"/showtime/:id",
-		[validateResource(getShowtimeSchema)],
+		[
+			validateResource(getShowtimeSchema),
+			deserializeUser,
+			requireUser,
+			ensureAdmin,
+		],
 		deleteShowtimeHandler
 	)
 
@@ -56,7 +74,7 @@ export default (router: Router) => {
 	 */
 	router.get(
 		"/showtime/:id",
-		[validateResource(getShowtimeSchema)],
+		[validateResource(getShowtimeSchema), deserializeUser, requireUser],
 		getShowtimeHandler
 	)
 
@@ -65,16 +83,21 @@ export default (router: Router) => {
 	 */
 	router.patch(
 		"/showtime/:id",
-		[validateResource(updateShowtimeStatusSchema)],
+		[
+			validateResource(updateShowtimeStatusSchema),
+			deserializeUser,
+			requireUser,
+			ensureAdmin,
+		],
 		updateShowtimeStatusHandler
 	)
 
 	/*
-	 * GET route to get showtime available seats (might change this to return array of seats)
+	 * GET route to get showtime available seats)
 	 */
 	router.get(
 		"/showtime/:id/seats",
-		[validateResource(getShowtimeSchema)],
+		[validateResource(getShowtimeSchema), deserializeUser, requireUser],
 		getShowtimeAvailableSeatsHandler
 	)
 
@@ -83,7 +106,7 @@ export default (router: Router) => {
 	 */
 	router.get(
 		"/showtime/upcoming",
-		[validateResource(querySchema)],
+		[validateResource(querySchema), deserializeUser, requireUser],
 		getUpcomingShowtimeController
 	)
 }

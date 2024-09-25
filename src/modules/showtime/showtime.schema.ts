@@ -49,14 +49,6 @@ export const getShowtimeSchema = z.object({
 				message: "Showtime ID can only be a number",
 			}),
 	}),
-	// query: z.object({
-	// 	append_to_response: z
-	// 		.string()
-	// 		.regex(
-	// 			/^[a-zA-Z]+(,[a-zA-Z]+)?$/,
-	// 			"Append to response must be in the format 'word' or 'word,word'"
-	// 		),
-	// }),
 })
 
 export const updateShowtimeSchema = z.object({
