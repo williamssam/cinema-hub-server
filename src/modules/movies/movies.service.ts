@@ -67,23 +67,26 @@ export const updateMovieTransaction = async (
 /**
  * This function will return a list of movies, or a single movie if an ID is provided
  */
-export const getMovie = async ({ movieId }: { movieId?: string }) => {
+export const getMovie = async (id: string) => {
 	const movie = sql`
-				SELECT
+			SELECT
 					movies.id, movies.title, movies.tagline, movies.slug, movies.overview,
 					movies.release_date, movies.poster_image_url, movies.homepage,
-					movies.runtime, movies.director, movies.origin_country, movies.trailer_link, JSON_AGG(JSONB_BUILD_OBJECT('id', genres.id, 'name', genres.name)) AS genres, movies.created_at, movies.updated_at
-				FROM
-						movies
-				JOin
-						movie_genres ON movies.id = movie_genres.movie_id
-				JOIN
-						genres ON movie_genres.genre_id = genres.id
-				${movieId ? sql`WHERE movies.id = ${movieId}` : sql``}
-				GROUP BY
+					movies.runtime, movies.director, movies.origin_country, movies.trailer_link,
+					JSON_AGG(JSONB_BUILD_OBJECT('id', genres.id, 'name', genres.name)) AS genres,
+					movies.created_at, movies.updated_at
+			FROM
+					movies
+			JOIN
+					movie_genres ON movies.id = movie_genres.movie_id
+			JOIN
+					genres ON movie_genres.genre_id = genres.id
+			WHERE
+					movies.id = ${id}
+			GROUP BY
 					movies.id
-				ORDER BY
-					movie.id DESC
+			ORDER BY
+					movies.id DESC
 		`
 	return movie
 }

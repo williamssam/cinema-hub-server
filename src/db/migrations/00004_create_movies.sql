@@ -35,3 +35,9 @@ BEFORE INSERT OR UPDATE ON movies
 FOR EACH ROW
 WHEN (NEW.title IS NOT NULL AND NEW.slug IS NULL)
 EXECUTE PROCEDURE set_slug_from_name();
+
+-- Trigger to call the function before any update
+CREATE TRIGGER update_movies_updated_at
+BEFORE UPDATE ON movies
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();

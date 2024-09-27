@@ -181,7 +181,7 @@ export const getMovieHandler = async (
 	try {
 		const { id } = req.params
 
-		const movie = await getMovie({ movieId: id })
+		const movie = await getMovie(id)
 		if (!movie.length) {
 			throw new ApiError("Movie does not exist", HttpStatusCode.NOT_FOUND)
 		}
@@ -262,7 +262,7 @@ export const getMovieShowtimeController = async (
 				showtime.end_time,
 				showtime.start_time,
 				showtime.available_seats,
-				showtime.price / 100 as price,
+				DIV(showtime.price, 100) as price,
 				showtime.status,
 				${
 					movie
@@ -288,11 +288,12 @@ export const getMovieShowtimeController = async (
 				showtime.updated_at
 			FROM
 					showtime
-			WHERE movie_id = ${id} AND start_time >= NOW()
 			JOIN
 				theatres ON showtime.theatre_id = theatres.id
 			JOIN
 				movies ON showtime.movie_id = movies.id
+			WHERE
+				movie_id = ${id} AND start_time >= NOW()
 			GROUP BY
 				showtime.id, theatres.id, movies.id
 			ORDER BY

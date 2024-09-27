@@ -19,9 +19,9 @@ export const ensureAdmin = async (
 	try {
 		const { user } = res.locals.payload
 
-		if (req.route.includes("admin") && user.role !== "admin") {
+		if (user.role !== "admin") {
 			throw new ApiError(
-				"You do not have access to this route, only admins can access this route",
+				"Access denied! Only admins can access this route",
 				HttpStatusCode.FORBIDDEN
 			)
 		}

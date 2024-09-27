@@ -10,6 +10,7 @@ import {
 	getAllShowtimeHandler,
 	getShowtimeAvailableSeatsHandler,
 	getShowtimeHandler,
+	getShowtimeReservations,
 	getUpcomingShowtimeController,
 	updateShowtimeHandler,
 	updateShowtimeStatusHandler,
@@ -100,6 +101,21 @@ export default (router: Router) => {
 		[validateResource(getShowtimeSchema), deserializeUser, requireUser],
 		getShowtimeAvailableSeatsHandler
 	)
+
+	/*
+	 * GET route to get showtime reservations
+	 */
+	router.get(
+		"/showtime/:id/seats",
+		[
+			validateResource(getShowtimeSchema),
+			deserializeUser,
+			requireUser,
+			ensureAdmin,
+		],
+		getShowtimeReservations
+	)
+
 
 	/*
 	 * GET route to get upcoming showtime (users)

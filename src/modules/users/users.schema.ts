@@ -13,11 +13,9 @@ export const createUserSchema = z.object({
 			.min(6, "Password too short - should be 6 characters minimum")
 			.max(30, "Password too long - should be 30 characters maximum")
 			.trim(),
-		role: z
-			.enum(["user", "admin"], {
-				required_error: "Role is required. Must be user or admin",
-			})
-			.catch("user"),
+		role: z.enum(["user", "admin"], {
+			required_error: "Role is required. Must be user or admin",
+		}),
 	}),
 })
 

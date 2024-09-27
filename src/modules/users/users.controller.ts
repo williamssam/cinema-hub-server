@@ -24,7 +24,7 @@ export const createUserHandler = async (
 	next: NextFunction
 ) => {
 	try {
-		const { email, name, password, role } = req.body
+		const { email, name, password, role = "user" } = req.body
 
 		// Check if user with this email exits
 		const data = await sql`SELECT email FROM users WHERE email = ${email}`
@@ -39,7 +39,7 @@ export const createUserHandler = async (
 					(email, name, password, role)
 				VALUES
 					(${email}, ${name}, ${password_hash}, ${role})
-				RETURNING *
+				RETURNING email, name, id, created_at, updated_at, role
 			`
 
 		return res.status(HttpStatusCode.CREATED).json({

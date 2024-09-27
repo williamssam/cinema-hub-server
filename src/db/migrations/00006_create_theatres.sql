@@ -6,4 +6,10 @@ CREATE TABLE IF NOT EXISTS theatres (
 	room_id TEXT UNIQUE NOT NULL,
 	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-)
+);
+
+-- Trigger to call the function before any update
+CREATE TRIGGER update_theatres_updated_at
+BEFORE UPDATE ON theatres
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();

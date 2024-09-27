@@ -1,10 +1,12 @@
 import { z } from "zod"
 import { querySchema } from "../../libs/resuable-schema"
 
-const createReservationSchema = z.object({
+export const createReservationSchema = z.object({
 	body: z.object({
 		user_id: z
-			.number({ required_error: "User ID is required" })
+			.number({
+				required_error: "User ID is required",
+			})
 			.positive("User ID must be a positive number")
 			.int("User ID must be a whole number"),
 		showtime_id: z

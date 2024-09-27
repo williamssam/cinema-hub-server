@@ -2,8 +2,13 @@ import { sql } from "../../db"
 
 export const getShowtimeWithId = async (id: string) => {
 	const data = await sql<
-		{ id: string; movie_id: string; theatre_id: string }[]
-	>`SELECT id, movie_id, theatre_id FROM showtime WHERE id = ${id}`
+		{
+			id: string
+			movie_id: string
+			theatre_id: string
+			status: "pending" | "active" | "done" | "cancelled"
+		}[]
+	>`SELECT id, movie_id, theatre_id, status FROM showtime WHERE id = ${id}`
 	return data
 }
 
@@ -20,7 +25,7 @@ export const getShowtime = async ({
 			showtime.end_time,
 			showtime.start_time,
 			showtime.available_seats,
-			(showtime.price / 100)::integer as price,
+			DIV(showtime.price, 100) as price,
 			showtime.status,
 			${
 				movie

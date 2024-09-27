@@ -6,6 +6,7 @@ import { generateSeatNumbers } from "../../libs/generate"
 import type { QueryInput } from "../../libs/resuable-schema"
 import { HttpStatusCode } from "../../utils/status-codes"
 import { getMovieWithId } from "../movies/movies.service"
+import { getAllReservations } from "../reservations/reservations.service"
 import { getTheatreWithId } from "../theatres/theatres.service"
 import type {
 	CreateShowtimeInput,
@@ -65,7 +66,9 @@ export const createShowtimeHandler = async (
 		}
 
 		const available_seats = theatre.at(0)?.capacity
-		const payload = { ...req.body, available_seats }
+		// convert price to cents
+		const showtime_price = price * 100
+		const payload = { ...req.body, available_seats, price: showtime_price }
 
 		const showtime = await sql`INSERT INTO showtime ${sql(payload)} RETURNING *`
 
@@ -104,6 +107,13 @@ export const updateShowtimeHandler = async (
 			throw new ApiError("Showtime does not exist", HttpStatusCode.NOT_FOUND)
 		}
 
+		if (showtime.at(0)?.status !== "pending") {
+			throw new ApiError(
+				"You cannot update an active, cancelled or completed showtime",
+				HttpStatusCode.NOT_FOUND
+			)
+		}
+
 		const movie = await getMovieWithId(movie_id.toString())
 		if (!movie.length) {
 			throw new ApiError("Movie does not exist", HttpStatusCode.NOT_FOUND)
@@ -115,7 +125,7 @@ export const updateShowtimeHandler = async (
 		}
 
 		const data =
-			await sql`UPDATE showtime SET movie_id = ${movie_id}, start_time = ${start_time}, end_time = ${end_time}, price = ${price}, theatre_id = ${theatre_id} WHERE id = ${id} RETURNING *`
+			await sql`UPDATE showtime SET movie_id = ${movie_id}, start_time = ${start_time}, end_time = ${end_time}, price = ${price * 100}, theatre_id = ${theatre_id} WHERE id = ${id} RETURNING *`
 		if (!data.length) {
 			throw new ApiError(
 				"Something went wrong, please try again",
@@ -301,7 +311,7 @@ export const getUpcomingShowtimeController = async (
 				showtime.end_time,
 				showtime.start_time,
 				showtime.available_seats,
-				showtime.price / 100 as price,
+				DIV(showtime.price, 100) as price,
 				showtime.status,
 				${
 					movie
@@ -356,14 +366,6 @@ export const getUpcomingShowtimeController = async (
 		return next(error)
 	}
 }
-
-/**
- * @description Get the available seats of a single showtime
- * @route GET /showtime/:id/available-seats
- * @param {string} id.path - The id of the showtime to fetch
- * @returns {object} - The available seats of the showtime
- * @throws {ApiError} - If the showtime does not exist, or if the request fails
- */
 
 /**
  * @description Get the available seats of a single showtime
@@ -426,6 +428,32 @@ export const getShowtimeAvailableSeatsHandler = async (
 				total_seats,
 				available_seats: reservedSeats,
 			},
+		})
+	} catch (error) {
+		return next(error)
+	}
+}
+
+// get showtime reservations (admins)
+export const getShowtimeReservations = async (
+	req: Request<GetShowtimeInput>,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const { id } = req.params
+
+		const showtime = await getShowtimeWithId(id)
+		if (!showtime.length) {
+			throw new ApiError("Showtime does not exist", HttpStatusCode.NOT_FOUND)
+		}
+
+		const reservations = getAllReservations({ showtime_id: id })
+
+		return res.status(HttpStatusCode.OK).json({
+			success: true,
+			message: "Showtime reservations fetched successfully!",
+			data: reservations,
 		})
 	} catch (error) {
 		return next(error)
