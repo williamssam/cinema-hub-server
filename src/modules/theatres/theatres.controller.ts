@@ -2,7 +2,6 @@ import type { NextFunction, Request, Response } from "express"
 import { PAGE_SIZE } from "../../constants/api"
 import { sql } from "../../db"
 import { ApiError } from "../../exceptions/api-error"
-import { generateCustomId } from "../../libs/generate"
 import { HttpStatusCode } from "../../utils/status-codes"
 import type {
 	CreateTheatreInput,
@@ -25,11 +24,7 @@ export const createTheatreHandler = async (
 			throw new ApiError("Theatre already exists!", HttpStatusCode.CONFLICT)
 		}
 
-		const payload = {
-			...req.body,
-			room_id: generateCustomId(),
-		}
-		const theatre = await sql`INSERT INTO theatres ${sql(payload)} RETURNING *`
+		const theatre = await sql`INSERT INTO theatres ${sql(req.body)} RETURNING *`
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "Theatre created successfully!",
@@ -109,7 +104,7 @@ export const getTheatreHandler = async (
 		const { id } = req.params
 
 		const data =
-			await sql`SELECT id, name, capacity, room_id FROM theatres WHERE id = ${id}`
+			await sql`SELECT id, name, capacity, seats_per_row FROM theatres WHERE id = ${id}`
 		if (!data.length) {
 			throw new ApiError("Theatre does not exist!", HttpStatusCode.NOT_FOUND)
 		}
@@ -131,7 +126,8 @@ export const getAllTheatreHandler = async (
 ) => {
 	try {
 		const { page = 1 } = req.query
-		const theatre = await sql`SELECT id, name, capacity, room_id FROM theatres`
+		const theatre =
+			await sql`SELECT id, name, capacity, seats_per_row FROM theatres`
 
 		const count = await sql`SELECT COUNT(*) FROM theatres`
 		const total = count.at(0)?.count

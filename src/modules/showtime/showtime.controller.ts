@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from "express"
 import { PAGE_SIZE } from "../../constants/api"
 import { sql } from "../../db"
 import { ApiError } from "../../exceptions/api-error"
-import { generateSeatNumbers } from "../../libs/generate"
+import { generateCustomId, generateSeatNumbers } from "../../libs/generate"
 import type { QueryInput } from "../../libs/resuable-schema"
 import { HttpStatusCode } from "../../utils/status-codes"
 import { getMovieWithId } from "../movies/movies.service"
@@ -47,8 +47,12 @@ export const createShowtimeHandler = async (
 		}
 
 		// check if there already a showtime set for that time at a particular theatre and status is not done or cancelled
-		const show =
-			await sql`SELECT * FROM showtime WHERE theatre_id = ${theatre_id} AND start_time >= ${start_time} AND end_time <= ${end_time} AND status != 'done' AND status != 'cancelled'`
+		const show = await sql`
+				SELECT id
+				FROM showtime
+				WHERE theatre_id = ${theatre_id}
+				AND (start_time >= ${start_time} AND end_time <= ${end_time})
+				AND status != 'done' AND status != 'cancelled'`
 		if (show.length) {
 			throw new ApiError(
 				"That time slot is already booked for a show at this theatre.",
@@ -68,7 +72,13 @@ export const createShowtimeHandler = async (
 		const available_seats = theatre.at(0)?.capacity
 		// convert price to cents
 		const showtime_price = price * 100
-		const payload = { ...req.body, available_seats, price: showtime_price }
+		const showtime_ref = generateCustomId()
+		const payload = {
+			...req.body,
+			available_seats,
+			price: showtime_price,
+			showtime_ref,
+		}
 
 		const showtime = await sql`INSERT INTO showtime ${sql(payload)} RETURNING *`
 
@@ -329,8 +339,7 @@ export const getUpcomingShowtimeController = async (
 						? sql`JSONB_BUILD_OBJECT(
 					'id', theatres.id,
 					'name', theatres.name,
-					'capacity', theatres.capacity,
-					'room_id', theatres.room_id) AS theatre`
+					) AS theatre`
 						: sql`showtime.theatre_id`
 				},
 				showtime.created_at,

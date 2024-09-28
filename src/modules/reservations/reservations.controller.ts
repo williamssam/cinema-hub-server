@@ -1,8 +1,11 @@
+import dayjs from "dayjs"
 import type { NextFunction, Request, Response } from "express"
 import { PAGE_SIZE } from "../../constants/api"
 import { sql } from "../../db"
 import { ApiError } from "../../exceptions/api-error"
+import { sendMail } from "../../libs/mailer"
 import type { QueryInput } from "../../libs/resuable-schema"
+import { reservationCancellationMail } from "../../mails/reservation-cancellation"
 import { HttpStatusCode } from "../../utils/status-codes"
 import type {
 	CreateReservationInput,
@@ -141,7 +144,7 @@ export const getReservationHandler = async (
 					'end_time', showtime.end_time,
 					'price', DIV(showtime.price, 100),
 					'status', showtime.status,
-					'movie_id', showtime.movie_id,
+					movies.id AS movie,
 					'theatre_id', showtime.theatre_id
 				) AS showtime,
 				reservations.seat_number,
@@ -152,6 +155,8 @@ export const getReservationHandler = async (
 				reservations
 			JOIN
 				showtime ON reservations.showtime_id = showtime.id
+			JOIN
+				movie ON showtime.movie_id = movie.id
 			WHERE
 				reservations.id = ${id}
 		`
@@ -177,12 +182,29 @@ export const cancelReservationHandler = async (
 	try {
 		const { id } = req.params
 
-		const reservation = await sql`SELECT id FROM reservations WHERE id = ${id}`
+		const reservation =
+			await sql`SELECT id, user_id, start_time, showtime.id AS showtime_id FROM reservations JOIN showtime ON reservations.showtime_id = showtime.id WHERE id = ${id}`
+
 		if (!reservation.length) {
 			throw new ApiError("Reservation does not exist", HttpStatusCode.NOT_FOUND)
 		}
 
+		const user =
+			await sql`SELECT name, email FROM users WHERE id = ${reservation.at(0)?.user_id}`
+		const showtime =
+			await sql`SELECT movies.name as movie, showtime.start_time FROM showtime JOIN movies ON showtime.movie_id = movies.id WHERE id = ${reservation.at(0)?.showtime_id}`
+
 		await sql`DELETE FROM reservations WHERE id = ${id}`
+		await sendMail({
+			to: user.at(0)?.email,
+			subject: "Reservation Cancelled",
+			html: reservationCancellationMail({
+				customer_name: user.at(0)?.name,
+				date: dayjs(reservation.at(0)?.start_time).format("DD-MM-YYYY"),
+				movie_title: showtime.at(0)?.movie,
+				time: dayjs(reservation.at(0)?.start_time).format("hh:mm A"),
+			}),
+		})
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "Reservation canceled successfully",
@@ -252,3 +274,34 @@ export const getAllReservationsHandler = async (
 	}
 }
 
+export const reservationStatsReportHandler = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const stat = await sql`
+			SELECT
+				COUNT(*) AS total_reservations,
+				COUNT(CASE WHEN status = 'confirmed' THEN 1 ELSE NULL END) AS confirmed_reservations,
+				COUNT(CASE WHEN status = 'completed' THEN 1 ELSE NULL END) AS completed_reservations
+			FROM
+				reservations
+		`
+		const total_reservations = stat.at(0)?.total_reservations
+		const confirmed_reservations = stat.at(0)?.confirmed_reservations
+		const completed_reservations = stat.at(0)?.completed_reservations
+
+		return res.json(HttpStatusCode.OK).json({
+			success: true,
+			message: "Reservation stats fetched successfully",
+			data: {
+				total_reservations,
+				confirmed_reservations,
+				completed_reservations,
+			},
+		})
+	} catch (error) {
+		return next(error)
+	}
+}

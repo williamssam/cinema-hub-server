@@ -9,6 +9,7 @@ import {
 	createReservationHandler,
 	getReservationHandler,
 	getUserReservationsHandler,
+	reservationStatsReportHandler,
 } from "./reservations.controller"
 import {
 	createReservationSchema,
@@ -26,7 +27,7 @@ export default (router: Router) => {
 		getUserReservationsHandler
 	)
 
-		/*
+	/*
 	 * GET route to fetch all users reservations (users only)
 	 */
 	router.get(
@@ -60,5 +61,14 @@ export default (router: Router) => {
 		"/reservations/:id",
 		[validateResource(getReservationSchema), deserializeUser, requireUser],
 		cancelReservationHandler
+	)
+
+	/*
+	 * GET route to fetch reservation reports
+	 */
+	router.get(
+		"/reservations/report",
+		[deserializeUser, requireUser, ensureAdmin],
+		reservationStatsReportHandler
 	)
 }

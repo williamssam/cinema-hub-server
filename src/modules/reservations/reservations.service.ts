@@ -81,3 +81,15 @@ export const createReservationTransaction = async (
 
 	return reservation
 }
+
+const reservationStats = async () => {
+	const stats = await sql`
+		SELECT
+			COUNT(*) AS total_reservations,
+			COUNT(CASE WHEN status = 'confirmed' THEN 1 ELSE NULL END) AS confirmed_reservations,
+			COUNT(CASE WHEN status = 'completed' THEN 1 ELSE NULL END) AS completed_reservations
+		FROM
+			reservations
+			`
+	return stats
+}

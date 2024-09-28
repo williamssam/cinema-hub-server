@@ -44,8 +44,7 @@ export const getShowtime = async ({
 				'id', theatres.id,
 				'name', theatres.name,
 				'capacity', theatres.capacity,
-				'seats_per_row', theatres.seats_per_row,
-				'room_id', theatres.room_id) AS theatre`
+				) AS theatre`
 					: sql`showtime.theatre_id`
 			},
 			showtime.created_at,

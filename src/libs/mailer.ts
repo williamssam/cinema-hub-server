@@ -20,6 +20,7 @@ const transporter = nodemailer.createTransport({
 export const sendMail = async (payload: Omit<SendMailOptions, "from">) => {
 	transporter.sendMail(
 		{
+			from: "Cinema Hub <admin@cinemahub.com>",
 			...payload,
 		},
 		(err, info) => {

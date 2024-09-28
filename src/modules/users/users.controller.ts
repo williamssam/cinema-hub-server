@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express"
 import { sql } from "../../db"
 import { ApiError } from "../../exceptions/api-error"
+import { sendMail } from "../../libs/mailer"
 import { HttpStatusCode } from "../../utils/status-codes"
 import {
 	hashPassword,
@@ -41,6 +42,18 @@ export const createUserHandler = async (
 					(${email}, ${name}, ${password_hash}, ${role})
 				RETURNING email, name, id, created_at, updated_at, role
 			`
+		if (!user.length) {
+			throw new ApiError(
+				"Error registering user, please try again later",
+				HttpStatusCode.INTERNAL_SERVER_ERROR
+			)
+		}
+
+		await sendMail({
+			to: email,
+			subject: "Welcome to Cinema Hub",
+			html: welcomeMail(),
+		})
 
 		return res.status(HttpStatusCode.CREATED).json({
 			success: true,

@@ -280,8 +280,7 @@ export const getMovieShowtimeController = async (
 						? sql`JSONB_BUILD_OBJECT(
 					'id', theatres.id,
 					'name', theatres.name,
-					'capacity', theatres.capacity,
-					'room_id', theatres.room_id) AS theatre`
+				) AS theatre`
 						: sql`showtime.theatre_id`
 				},
 				showtime.created_at,
