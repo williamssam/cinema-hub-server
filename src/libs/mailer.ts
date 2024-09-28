@@ -4,7 +4,7 @@ import { config } from "../config/configuration"
 // test details
 const smtp = {
 	host: config.SMTP_HOST,
-	port: 2525,
+	port: 587,
 	secure: false,
 	auth: {
 		user: config.SMTP_USERNAME,

@@ -106,7 +106,7 @@ export default (router: Router) => {
 	 * GET route to get showtime reservations
 	 */
 	router.get(
-		"/showtime/:id/seats",
+		"/showtime/:id/reservation",
 		[
 			validateResource(getShowtimeSchema),
 			deserializeUser,

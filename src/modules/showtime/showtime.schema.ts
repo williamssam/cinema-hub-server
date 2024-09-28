@@ -26,7 +26,8 @@ export const createShowtimeSchema = z.object({
 			price: z.coerce
 				.number({
 					required_error: "Price is required",
-					description: "We only allow cents",
+					description:
+						"We only allow subunits. Sending an amount in subunits simply means multiplying the base amount by 100",
 				})
 				.positive("Price must be a positive number")
 				.int("Price must be an integer"),

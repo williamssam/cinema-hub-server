@@ -1,5 +1,6 @@
 import { customAlphabet } from "nanoid"
 import { ALPHABETS } from "../constants/api"
+import type { PaystackPaymentResp } from "../types/type"
 
 export const generateCustomId = customAlphabet(ALPHABETS, 12)
 
@@ -47,4 +48,37 @@ export const generateSeatNumbers = ({
 	 * Return the array of seat numbers
 	 */
 	return seats
+}
+
+type PaymentPayload = {
+	email: string
+	amount: string
+	name: string
+	showtime_ref: string
+	seat_number: string
+}
+export const generatePaymentLink = async (payload: PaymentPayload) => {
+	try {
+		const resp = await fetch("https://api.paystack.co/transaction/initialize", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${process.env.PAYSTACK_PRIVATE_KEY}`,
+			},
+			body: JSON.stringify({
+				email: payload.email,
+				amount: payload.amount,
+				currency: "NGN",
+				metadata: {
+					customer_name: payload.name,
+					showtime_id: payload.showtime_ref,
+					seat_number: payload.seat_number,
+				},
+			}),
+		})
+		const data = await resp.json()
+		return data as PaystackPaymentResp
+	} catch (error) {
+		console.error("error", error)
+	}
 }

@@ -5,9 +5,12 @@ import { ApiError } from "../../exceptions/api-error"
 import { generateCustomId, generateSeatNumbers } from "../../libs/generate"
 import type { QueryInput } from "../../libs/resuable-schema"
 import { HttpStatusCode } from "../../utils/status-codes"
-import { getMovieWithId } from "../movies/movies.service"
+import { getMovieWithId, joinMovieObject } from "../movies/movies.service"
 import { getAllReservations } from "../reservations/reservations.service"
-import { getTheatreWithId } from "../theatres/theatres.service"
+import {
+	getTheatreWithId,
+	joinTheatreObject,
+} from "../theatres/theatres.service"
 import type {
 	CreateShowtimeInput,
 	GetAllShowtimeInput,
@@ -51,8 +54,8 @@ export const createShowtimeHandler = async (
 				SELECT id
 				FROM showtime
 				WHERE theatre_id = ${theatre_id}
-				AND (start_time >= ${start_time} AND end_time <= ${end_time})
-				AND status != 'done' AND status != 'cancelled'`
+				AND (start_time >= ${start_time} OR end_time <= ${end_time})
+				AND status NOT IN ('done', 'cancelled')`
 		if (show.length) {
 			throw new ApiError(
 				"That time slot is already booked for a show at this theatre.",
@@ -70,7 +73,7 @@ export const createShowtimeHandler = async (
 		}
 
 		const available_seats = theatre.at(0)?.capacity
-		// convert price to cents
+		// convert price to subunits
 		const showtime_price = price * 100
 		const showtime_ref = generateCustomId()
 		const payload = {
@@ -172,6 +175,16 @@ export const deleteShowtimeHandler = async (
 		const showtime = await getShowtimeWithId(id)
 		if (!showtime.length) {
 			throw new ApiError("Showtime does not exist", HttpStatusCode.NOT_FOUND)
+		}
+
+		// check if showtime has pending reservation
+		const reservation =
+			await sql`SELECT id from reservations WHERE showtime_id = ${id} AND status != 'completed'`
+		if (reservation.length) {
+			throw new ApiError(
+				"You cannot delete a showtime that has pending/confirmed reservations",
+				HttpStatusCode.BAD_REQUEST
+			)
 		}
 
 		await sql`DELETE FROM showtime WHERE id = ${id}`
@@ -323,25 +336,8 @@ export const getUpcomingShowtimeController = async (
 				showtime.available_seats,
 				DIV(showtime.price, 100) as price,
 				showtime.status,
-				${
-					movie
-						? sql`JSONB_BUILD_OBJECT(
-					'id', movies.id,
-					'title', movies.title,
-					'overview', movies.overview,
-					'poster_image_url',
-					movies.poster_image_url,
-					'runtime', movies.runtime) AS movie`
-						: sql`showtime.movie_id`
-				},
-				${
-					theatre
-						? sql`JSONB_BUILD_OBJECT(
-					'id', theatres.id,
-					'name', theatres.name,
-					) AS theatre`
-						: sql`showtime.theatre_id`
-				},
+				${movie ? joinMovieObject() : sql`showtime.movie_id`},
+				${theatre ? joinTheatreObject() : sql`showtime.theatre_id`},
 				showtime.created_at,
 				showtime.updated_at
 			FROM
@@ -443,7 +439,8 @@ export const getShowtimeAvailableSeatsHandler = async (
 	}
 }
 
-// get showtime reservations (admins)
+
+
 export const getShowtimeReservations = async (
 	req: Request<GetShowtimeInput>,
 	res: Response,
@@ -457,7 +454,7 @@ export const getShowtimeReservations = async (
 			throw new ApiError("Showtime does not exist", HttpStatusCode.NOT_FOUND)
 		}
 
-		const reservations = getAllReservations({ showtime_id: id })
+		const reservations = await getAllReservations({ showtime_id: id })
 
 		return res.status(HttpStatusCode.OK).json({
 			success: true,

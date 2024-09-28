@@ -9,3 +9,14 @@ export const getUserByEmail = async ({ email }: { email: string }) => {
 	const data = await sql`SELECT email FROM users WHERE email = ${email}`
 	return data
 }
+
+export const joinUserObject = () => {
+	return sql`
+		JSONB_BUILD_OBJECT(
+			'id', user.id,
+			'email', users.email,
+			'name', users.name,
+			'role', users.role
+		) AS customer
+	`
+}

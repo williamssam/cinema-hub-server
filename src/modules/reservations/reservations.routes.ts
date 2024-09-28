@@ -7,15 +7,16 @@ import { validateResource } from "../../middlewares/validate-resource"
 import {
 	cancelReservationHandler,
 	createReservationHandler,
+	getAllReservationsHandler,
 	getReservationHandler,
 	getUserReservationsHandler,
-	reservationStatsReportHandler,
+	reservationReportHandler,
 } from "./reservations.controller"
 import {
 	createReservationSchema,
 	getReservationSchema,
+	getUserReservationsSchema,
 } from "./reservations.schema"
-import { getAllReservations } from "./reservations.service"
 
 export default (router: Router) => {
 	/*
@@ -23,17 +24,26 @@ export default (router: Router) => {
 	 */
 	router.get(
 		"/reservations",
-		[validateResource(querySchema), deserializeUser, requireUser],
-		getUserReservationsHandler
+		[validateResource(querySchema), deserializeUser, requireUser, ensureAdmin],
+		getAllReservationsHandler
 	)
 
 	/*
 	 * GET route to fetch all users reservations (users only)
 	 */
 	router.get(
-		"/reservations/all",
-		[validateResource(querySchema), deserializeUser, requireUser, ensureAdmin],
-		getAllReservations
+		"/reservations/:id/user",
+		[validateResource(getUserReservationsSchema), deserializeUser, requireUser],
+		getUserReservationsHandler
+	)
+
+	/*
+	 * GET route to fetch reservation reports
+	 */
+	router.get(
+		"/reservations/report",
+		[deserializeUser, requireUser, ensureAdmin],
+		reservationReportHandler
 	)
 
 	/*
@@ -55,20 +65,11 @@ export default (router: Router) => {
 	)
 
 	/*
-	 * PATCH route to cancel a reservation
+	 * DELETE route to cancel a reservation
 	 */
-	router.patch(
-		"/reservations/:id",
+	router.delete(
+		"/reservations/:id/cancel",
 		[validateResource(getReservationSchema), deserializeUser, requireUser],
 		cancelReservationHandler
-	)
-
-	/*
-	 * GET route to fetch reservation reports
-	 */
-	router.get(
-		"/reservations/report",
-		[deserializeUser, requireUser, ensureAdmin],
-		reservationStatsReportHandler
 	)
 }

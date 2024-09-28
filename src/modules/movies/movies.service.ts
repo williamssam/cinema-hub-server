@@ -101,7 +101,7 @@ export const getMovies = async ({
 				SELECT
 					movies.id, movies.title, movies.tagline, movies.slug, movies.overview,
 					movies.release_date, movies.poster_image_url, movies.homepage,
-					movies.runtime, movies.director, ARRAY_AGG(genres.name) AS genres, movies.created_at, movies.updated_at
+					movies.runtime, movies.director, JSON_AGG(JSONB_BUILD_OBJECT('id', genres.id, 'name', genres.name)) AS genres, movies.created_at, movies.updated_at
 				FROM
 					movies
 				JOIN
@@ -137,6 +137,25 @@ export const totalMovies = async (id?: string) => {
 			`
 	return count.at(0)?.count
 }
+
+
+export const joinMovieObject = () => {
+	return sql`
+	JSONB_BUILD_OBJECT(
+		'id', movies.id,
+		'title', movies.title,
+		'tagline', movies.tagline,
+		'overview', movies.overview,
+		'runtime', movies.runtime,
+		'original_language', movies.original_language,
+		'poster_image_url', movies.poster_image_url,
+		'release_date', movies.release_date,
+		'director', movies.director
+		)
+	AS movie
+	`
+}
+
 
 
 // export const getMovies = async ({ movieId }: { movieId?: string }) => {

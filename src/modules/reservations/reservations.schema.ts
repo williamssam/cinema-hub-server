@@ -15,13 +15,15 @@ export const createReservationSchema = z.object({
 			})
 			.positive("Showtime ID must be a positive number")
 			.int("Showtime ID must be a whole number"),
-		seat_number: z
+		seat_numbers: z
 			.string({ required_error: "Seat number is required" })
 			.regex(
 				/^[A-Z]{1,2}\d{3}$/,
 				"Seat number must be in the format A001, A002, etc."
 			)
-			.trim(),
+			.array()
+			.nonempty("Seat numbers cannot be empty")
+			.max(5, "Cannot have more than 5 seat numbers"),
 	}),
 })
 
@@ -33,6 +35,18 @@ export const getReservationSchema = z.object({
 				message: "Reservation ID can only be a number",
 			}),
 	}),
+	query: querySchema.shape.query.omit({ page: true }),
+})
+
+export const getUserReservationsSchema = z.object({
+	params: z.object({
+		id: z
+			.string({ required_error: "User ID is required" })
+			.refine(value => !Number.isNaN(Number(value)), {
+				message: "User ID can only be a number",
+			}),
+	}),
+	...querySchema.shape,
 })
 
 /*
@@ -52,8 +66,22 @@ export const getAllReservationsSchema = querySchema.extend({
 	),
 })
 
+export const updateReservationStatusSchema = z.object({
+	...getReservationSchema.omit({ query: true }).shape,
+	body: z.object({
+		status: z.enum(["confirmed", "completed"], {
+			required_error:
+				"Status is required and must be one of the following: confirmed or completed",
+		}),
+	}),
+})
+
 export type CreateReservationInput = z.infer<
 	typeof createReservationSchema
 >["body"]
-export type GetReservationInput = z.infer<typeof getReservationSchema>["params"]
+export type GetReservationInput = z.infer<typeof getReservationSchema>
 export type GetAllReservationsInput = z.infer<typeof getAllReservationsSchema>
+export type UpdateReservationStatusInput = z.infer<
+	typeof updateReservationStatusSchema
+>
+export type GetUserReservationsInput = z.infer<typeof getUserReservationsSchema>

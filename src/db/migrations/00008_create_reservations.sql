@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS reservations (
 	id SERIAL PRIMARY KEY,
 	user_id INTEGER NOT NULL REFERENCES users(id),
-	showtime_id INTEGER NOT NULL REFERENCES showtime(id),
+	showtime_id INTEGER NOT NULL REFERENCES showtime(id) ON DELETE CASCADE,
 	seat_number VARCHAR(5) UNIQUE NOT NULL,
 	-- "pending" will be automatically deleted after 15 mins
 	-- "confirmed" is when user has paid for that seat

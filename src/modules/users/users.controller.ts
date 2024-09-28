@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express"
 import { sql } from "../../db"
 import { ApiError } from "../../exceptions/api-error"
 import { sendMail } from "../../libs/mailer"
+import { welcomeMail } from "../../mails/welcome-mail"
 import { HttpStatusCode } from "../../utils/status-codes"
 import {
 	hashPassword,

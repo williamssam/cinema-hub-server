@@ -1,4 +1,6 @@
 import { sql } from "../../db"
+import { joinMovieObject } from "../movies/movies.service"
+import { joinTheatreObject } from "../theatres/theatres.service"
 
 export const getShowtimeWithId = async (id: string) => {
 	const data = await sql<
@@ -25,28 +27,10 @@ export const getShowtime = async ({
 			showtime.end_time,
 			showtime.start_time,
 			showtime.available_seats,
-			DIV(showtime.price, 100) as price,
+			DIV(showtime.price, 100)::BIGINT as price,
 			showtime.status,
-			${
-				movie
-					? sql`JSONB_BUILD_OBJECT(
-				'id', movies.id,
-				'title', movies.title,
-				'overview', movies.overview,
-				'poster_image_url',
-				movies.poster_image_url,
-				'runtime', movies.runtime) AS movie`
-					: sql`showtime.movie_id`
-			},
-			${
-				theatre
-					? sql`JSONB_BUILD_OBJECT(
-				'id', theatres.id,
-				'name', theatres.name,
-				'capacity', theatres.capacity,
-				) AS theatre`
-					: sql`showtime.theatre_id`
-			},
+			${movie ? joinMovieObject() : sql`showtime.movie_id`},
+			${theatre ? joinTheatreObject() : sql`showtime.theatre_id`},
 			showtime.created_at,
 			showtime.updated_at
 		FROM
@@ -98,4 +82,17 @@ export const getActiveShowtimeWithTheatreId = (theatre_id: number) => {
 	`
 
 	return data
+}
+
+export const joinShowtimeObject = () => {
+	return sql`
+	JSONB_BUILD_OBJECT(
+		'id', showtime.id,
+		'start_time', showtime.start_time,
+		'end_time', showtime.end_time,
+		'price', DIV(showtime.price, 100),
+		'status', showtime.status
+		)
+	AS showtime
+	`
 }

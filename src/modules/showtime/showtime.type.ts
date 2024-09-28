@@ -5,6 +5,7 @@ export type Showtime = {
 		start_time: string
 		end_time: string
 		available_seats: number
+		showtime_ref: string
 		price: number
 		status: "pending" | "active" | "done" | "cancelled"
 		created_at: Date

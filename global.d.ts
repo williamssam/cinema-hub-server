@@ -12,5 +12,7 @@ namespace NodeJS {
 			SMTP_HOST: string
 			SMTP_USER: string
 			SMTP_PASS: string
+			PAYSTACK_PRIVATE_KEY: string
+			PAYSTACK_PUBLIC_KEY: string
 		}
 }

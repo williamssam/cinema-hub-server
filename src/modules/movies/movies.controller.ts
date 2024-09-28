@@ -4,6 +4,7 @@ import { sql } from "../../db"
 import { ApiError } from "../../exceptions/api-error"
 import type { QueryInput } from "../../libs/resuable-schema"
 import { HttpStatusCode } from "../../utils/status-codes"
+import { joinTheatreObject } from "../theatres/theatres.service"
 import type {
 	CreateMovieInput,
 	GetAllMoviesInput,
@@ -16,6 +17,7 @@ import {
 	getMovieGenres,
 	getMovieWithId,
 	getMovies,
+	joinMovieObject,
 	totalMovies,
 	updateMovieTransaction,
 } from "./movies.service"
@@ -264,25 +266,8 @@ export const getMovieShowtimeController = async (
 				showtime.available_seats,
 				DIV(showtime.price, 100) as price,
 				showtime.status,
-				${
-					movie
-						? sql`JSONB_BUILD_OBJECT(
-					'id', movies.id,
-					'title', movies.title,
-					'overview', movies.overview,
-					'poster_image_url',
-					movies.poster_image_url,
-					'runtime', movies.runtime) AS movie`
-						: sql`showtime.movie_id`
-				},
-				${
-					theatre
-						? sql`JSONB_BUILD_OBJECT(
-					'id', theatres.id,
-					'name', theatres.name,
-				) AS theatre`
-						: sql`showtime.theatre_id`
-				},
+				${movie ? joinMovieObject() : sql`showtime.movie_id`},
+				${theatre ? joinTheatreObject() : sql`showtime.theatre_id`},
 				showtime.created_at,
 				showtime.updated_at
 			FROM

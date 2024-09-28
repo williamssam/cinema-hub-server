@@ -4,18 +4,18 @@ type MailPayload = {
 	date: string
 	time: string
 	theatre: string
-	seat: string
+	seat_number: string
 	payment_link: string
 }
 
-const reservationMail = (payload: MailPayload) => {
+export const reservationMail = (payload: MailPayload) => {
 	return `
 		<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking Confirmation</title>
+    <title>Reservation</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -71,18 +71,18 @@ const reservationMail = (payload: MailPayload) => {
             <h1>Cinema Hub</h1>
         </div>
         <div class="content">
-            <h2>Booking Confirmation</h2>
+            <h2>Reservation Confirmation</h2>
             <p>Dear ${payload.customer_name},</p>
-            <p>Thank you for booking with us! Your reservation for the movie <strong>${payload.movie_title}</strong> has been successfully made.</p>
-            <p><strong>Booking Details:</strong></p>
+            <p>Thank you for reservation with us! Your reservation for the movie <strong>${payload.movie_title}</strong> has been successfully made.</p>
+            <p><strong>Reservation Details:</strong></p>
             <ul>
                 <li><strong>Movie:</strong> ${payload.movie_title}</li>
                 <li><strong>Date:</strong> ${payload.date}</li>
                 <li><strong>Time:</strong> ${payload.time}</li>
                 <li><strong>Theatre:</strong> ${payload.theatre}</li>
-                <li><strong>Seat Number:</strong> ${payload.seat}</li>
+                <li><strong>Seat Number:</strong> ${payload.seat_number}</li>
             </ul>
-            <p>Please note that your booking will be held for 15 minutes. If payment is not completed within this time, your reservation will be automatically cancelled.</p>
+            <p>Please note that your reservation will be held for 15 minutes. If payment is not completed within this time, your reservation will be automatically cancelled.</p>
             <p>To complete your payment, please click the button below:</p>
             <a href="${payload.payment_link}" class="button">Complete Payment</a>
             <p>Thank you for choosing our <strong>Cinema Hub</strong>. We look forward to seeing you!</p>

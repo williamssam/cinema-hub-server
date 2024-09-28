@@ -1,4 +1,4 @@
-const welcomeMail = () => {
+export const welcomeMail = () => {
 	return `
 		<!DOCTYPE html>
 <html lang="en">
