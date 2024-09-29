@@ -1,8 +1,9 @@
+import dayjs from "dayjs"
+
 type MailPayload = {
 	customer_name: string
 	movie_title: string
-	date: string
-	time: string
+	start_time: string
 	theatre: string
 	seat_number: string
 	payment_link: string
@@ -77,8 +78,8 @@ export const reservationMail = (payload: MailPayload) => {
             <p><strong>Reservation Details:</strong></p>
             <ul>
                 <li><strong>Movie:</strong> ${payload.movie_title}</li>
-                <li><strong>Date:</strong> ${payload.date}</li>
-                <li><strong>Time:</strong> ${payload.time}</li>
+                 <li><strong>Date:</strong> ${dayjs(payload.start_time).format("dddd, MMMM D, YYYY")}</li>
+            <li><strong>Time:</strong> ${dayjs(payload?.start_time).format("h:mm A")}</li>
                 <li><strong>Theatre:</strong> ${payload.theatre}</li>
                 <li><strong>Seat Number:</strong> ${payload.seat_number}</li>
             </ul>

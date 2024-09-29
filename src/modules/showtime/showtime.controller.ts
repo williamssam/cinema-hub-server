@@ -440,7 +440,6 @@ export const getShowtimeAvailableSeatsHandler = async (
 }
 
 
-
 export const getShowtimeReservations = async (
 	req: Request<GetShowtimeInput>,
 	res: Response,

@@ -1,5 +1,7 @@
 import dayjs from "dayjs"
 import type { NextFunction, Request, Response } from "express"
+import crypto from "node:crypto"
+import { config } from "../../config/configuration"
 import { PAGE_SIZE } from "../../constants/api"
 import { sql } from "../../db"
 import { ApiError } from "../../exceptions/api-error"
@@ -8,6 +10,7 @@ import { sendMail } from "../../libs/mailer"
 import type { QueryInput } from "../../libs/resuable-schema"
 import { reservationMail } from "../../mails/reservation"
 import { reservationCancellationMail } from "../../mails/reservation-cancellation"
+import type { TransactionConfirmationResponse } from "../../types/type"
 import { HttpStatusCode } from "../../utils/status-codes"
 import { joinMovieObject } from "../movies/movies.service"
 import { joinShowtimeObject } from "../showtime/showtime.service"
@@ -135,12 +138,12 @@ export const createReservationHandler = async (
 			seat_numbers,
 			user_id,
 		})
-		// if (!data) {
-		// 	throw new ApiError(
-		// 		"Failed to create reservation, please try again!",
-		// 		HttpStatusCode.BAD_REQUEST
-		// 	)
-		// }
+		if (!data) {
+			throw new ApiError(
+				"Failed to create reservation, please try again!",
+				HttpStatusCode.BAD_REQUEST
+			)
+		}
 
 		// const reservation = data.reservation
 		const user_data =
@@ -157,6 +160,7 @@ export const createReservationHandler = async (
 			name: user_data.at(0)?.name,
 			showtime_ref: showtime?.at(0)?.showtime_ref,
 			seat_number: seat_numbers.join(". "),
+			reservation_ids: data,
 		})
 
 		await sendMail({
@@ -164,8 +168,7 @@ export const createReservationHandler = async (
 			subject: "Reservation Confirmation",
 			html: reservationMail({
 				customer_name: user_data.at(0)?.name,
-				date: dayjs(showtime.at(0)?.start_time).format("dddd, MMMM D, YYYY"),
-				time: dayjs(showtime.at(0)?.start_time).format("h:mm A"),
+				start_time: showtime.at(0)?.start_time,
 				seat_number: seat_numbers.join(". "),
 				movie_title: movie.at(0)?.title,
 				payment_link: payment_data?.data?.authorization_url || "",
@@ -462,24 +465,71 @@ export const reservationReportHandler = async (
 		const stat = await sql`
 			SELECT
 				COUNT(*)::int AS total_reservations,
-				COUNT(CASE WHEN status = 'confirmed' THEN 1 ELSE NULL END)::int AS confirmed_reservations,
-				COUNT(CASE WHEN status = 'completed' THEN 1 ELSE NULL END)::int AS completed_reservations
+				COUNT(CASE WHEN reservations.status = 'confirmed' THEN 1 ELSE NULL END)::int AS confirmed_reservations,
+				COUNT(CASE WHEN reservations.status = 'completed' THEN 1 ELSE NULL END)::int AS completed_reservations,
+				showtime.price AS price
 			FROM
 				reservations
+			JOIN
+				showtime ON reservations.showtime_id = showtime.id
+			GROUP BY
+				showtime.price
 		`
+
 		const total_reservations = stat.at(0)?.total_reservations
 		const confirmed_reservations = stat.at(0)?.confirmed_reservations
 		const completed_reservations = stat.at(0)?.completed_reservations
+		const total_revenue = stat.at(0)?.price * confirmed_reservations
 
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "Reservation report fetched successfully",
 			data: {
+				total_revenue,
 				total_reservations,
 				confirmed_reservations,
 				completed_reservations,
 			},
 		})
+	} catch (error) {
+		return next(error)
+	}
+}
+
+// specifically for paystack
+export const verifyPaymentHandler = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const hash = crypto
+			.createHmac("sha512", config.PAYMENT_SECRET_KEY)
+			.update(JSON.stringify(req.body))
+			.digest("hex")
+
+		if (hash !== req.headers["x-paystack-signature"]) {
+			throw new ApiError("Invalid signature", HttpStatusCode.BAD_REQUEST)
+		}
+
+		const resp = req.body as TransactionConfirmationResponse
+
+		if (resp.event === "charge.success" && resp.data.status === "success") {
+			await sql`
+				UPDATE
+					reservations
+				SET status = 'completed',
+				SET payment_ref = ${resp.data.reference},
+				SET paid_at = ${resp.data.paid_at}
+				WHERE
+					id IN (${resp.data.metadata?.reservation_ids})`
+
+			// await sendMail({
+			// 	to:
+			// })
+		}
+
+		return res.send(HttpStatusCode.OK)
 	} catch (error) {
 		return next(error)
 	}

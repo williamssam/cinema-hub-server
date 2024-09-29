@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS reservations (
 	-- "confirmed" is when user has paid for that seat
 	-- "completed" is after showtime has passed
 	status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'completed')),
+	payment_ref TEXT,
+	paid_at TIMESTAMPZ,
 	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

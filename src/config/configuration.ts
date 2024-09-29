@@ -19,4 +19,5 @@ export const config = {
 		key: process.env.REFRESH_TOKEN_KEY,
 		expires_in: process.env.REFRESH_TOKEN_KEY_EXPIRES_IN,
 	},
+	PAYMENT_SECRET_KEY: process.env.PAYSTACK_PRIVATE_KEY,
 }

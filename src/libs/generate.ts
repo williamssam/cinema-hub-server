@@ -54,6 +54,7 @@ type PaymentPayload = {
 	email: string
 	amount: string
 	name: string
+	reservation_ids: number[]
 	showtime_ref: string
 	seat_number: string
 }
@@ -73,6 +74,7 @@ export const generatePaymentLink = async (payload: PaymentPayload) => {
 					customer_name: payload.name,
 					showtime_id: payload.showtime_ref,
 					seat_number: payload.seat_number,
+					reservation_id: payload.reservation_ids,
 				},
 			}),
 		})

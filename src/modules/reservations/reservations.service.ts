@@ -49,18 +49,25 @@ type ReservationPayload = {
 export const createReservationTransaction = async (
 	payload: ReservationPayload
 ) => {
+
 	return await sql.begin(async sql => {
+		const ids: number[] = []
+
 		for (const seat_number of payload.seat_numbers) {
-			await sql<Reservation[]>`INSERT INTO
+			const [reservation] = await sql<Reservation[]>`INSERT INTO
 					reservations (showtime_id, seat_number, user_id)
 				VALUES
 					(${payload.showtime_id}, ${seat_number}, ${payload.user_id})
 				RETURNING
-					id, user_id, showtime_id, seat_number, status, created_at, updated_at`
+					id`
 
 			await sql<
 				Showtime[]
 			>`UPDATE showtime SET available_seats = available_seats - 1 WHERE id = ${payload.showtime_id} RETURNING *`
+
+			ids.push(reservation.id)
 		}
+
+		return ids
 	})
 }

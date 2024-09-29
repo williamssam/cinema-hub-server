@@ -1,9 +1,9 @@
+import dayjs from "dayjs"
+
 type MailPayload = {
 	customer_name: string
 	movie_title: string
-	date: string
-	time: string
-	theatre: string
+	start_time: string
 	seat: string
 }
 
@@ -64,9 +64,8 @@ export const reservationReminderMail = (payload: MailPayload) => {
             <p>Dear ${payload.customer_name},</p>
             <p>This is a friendly reminder that your movie booking is scheduled to start in one hour.</p>
             <p><strong>Movie:</strong> ${payload.movie_title}</p>
-            <p><strong>Date:</strong> ${payload.date}</p>
-            <p><strong>Time:</strong> ${payload.time}</p>
-						<p><strong>Theatre:</strong> ${payload.theatre}</p>
+            <p><strong>Date:</strong> ${dayjs(payload.start_time).format("dddd, MMMM D, YYYY")}</p>
+            <p><strong>Time:</strong> ${dayjs(payload?.start_time).format("h:mm A")}</p>
             <p><strong>Seat Number:</strong> ${payload.seat}</p>
             <p>We look forward to seeing you at our cinema!</p>
         </div>
