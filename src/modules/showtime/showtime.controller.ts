@@ -6,7 +6,6 @@ import { generateCustomId, generateSeatNumbers } from "../../libs/generate"
 import type { QueryInput } from "../../libs/resuable-schema"
 import { HttpStatusCode } from "../../utils/status-codes"
 import { getMovieWithId, joinMovieObject } from "../movies/movies.service"
-import { getAllReservations } from "../reservations/reservations.service"
 import {
 	getTheatreWithId,
 	joinTheatreObject,
@@ -15,10 +14,15 @@ import type {
 	CreateShowtimeInput,
 	GetAllShowtimeInput,
 	GetShowtimeInput,
+	GetShowtimeReservationInput,
 	UpdateShowtimeInput,
 	UpdateShowtimeStatusInput,
 } from "./showtime.schema"
-import { getShowtime, getShowtimeWithId } from "./showtime.service"
+import {
+	getShowtime,
+	getShowtimeWithId,
+	joinShowtimeObject,
+} from "./showtime.service"
 import type { Showtime } from "./showtime.type"
 
 /**
@@ -249,8 +253,38 @@ export const getAllShowtimeHandler = async (
 	next: NextFunction
 ) => {
 	try {
-		const { page = 1, append_to_response } = req.query
-		const data = await getShowtime({ append: append_to_response })
+		const { page: requestedPage, append_to_response } = req.query
+
+		const theatre = append_to_response?.includes("theatre")
+		const movie = append_to_response?.includes("movie")
+
+		const page = Number(requestedPage) || 1
+		const offset = (page - 1) * PAGE_SIZE
+
+		const data = await sql`
+			SELECT
+				showtime.id,
+				showtime.end_time,
+				showtime.start_time,
+				showtime.available_seats,
+				(showtime.price / 100)::BIGINT AS price,
+				showtime.status,
+				${movie ? joinMovieObject() : sql`showtime.movie_id`},
+				${theatre ? joinTheatreObject() : sql`showtime.theatre_id`},
+				showtime.created_at,
+				showtime.updated_at
+			FROM
+					showtime
+			JOIN
+				theatres ON showtime.theatre_id = theatres.id
+			JOIN
+				movies ON showtime.movie_id = movies.id
+			GROUP BY
+				showtime.id, theatres.id, movies.id
+			ORDER BY
+				showtime.id DESC
+			LIMIT ${PAGE_SIZE} OFFSET ${offset}
+		`
 
 		const count = await sql`SELECT COUNT(*) FROM showtime`
 		const total = count.at(0)?.count
@@ -323,10 +357,13 @@ export const getUpcomingShowtimeController = async (
 	next: NextFunction
 ) => {
 	try {
-		const { page, append_to_response } = req.query
+		const { page: requestedPage, append_to_response } = req.query
 
 		const movie = append_to_response?.includes("movie")
 		const theatre = append_to_response?.includes("theatre")
+
+		const page = Number(requestedPage) || 1
+		const offset = (page - 1) * PAGE_SIZE
 
 		const showtime = await sql`
 				SELECT
@@ -341,8 +378,9 @@ export const getUpcomingShowtimeController = async (
 				showtime.created_at,
 				showtime.updated_at
 			FROM
-					showtime
-			WHERE start_time >= NOW()
+				showtime
+			WHERE
+				start_time >= NOW()
 			JOIN
 				theatres ON showtime.theatre_id = theatres.id
 			JOIN
@@ -351,6 +389,7 @@ export const getUpcomingShowtimeController = async (
 				showtime.id, theatres.id, movies.id
 			ORDER BY
 				start_time ASC
+			LIMIT ${PAGE_SIZE} OFFSET ${offset}
 		`
 		const count =
 			await sql`SELECT count(*) FROM showtime WHERE start_time >= NOW()`
@@ -439,26 +478,69 @@ export const getShowtimeAvailableSeatsHandler = async (
 	}
 }
 
-
-export const getShowtimeReservations = async (
-	req: Request<GetShowtimeInput>,
+export const getShowtimeReservationsHandler = async (
+	req: Request<
+		GetShowtimeReservationInput["params"],
+		unknown,
+		unknown,
+		GetShowtimeReservationInput["query"]
+	>,
 	res: Response,
 	next: NextFunction
 ) => {
 	try {
 		const { id } = req.params
+		const { page: requestedPage, append_to_response } = req.query
 
-		const showtime = await getShowtimeWithId(id)
-		if (!showtime.length) {
+		const data = await getShowtimeWithId(id)
+		if (!data.length) {
 			throw new ApiError("Showtime does not exist", HttpStatusCode.NOT_FOUND)
 		}
 
-		const reservations = await getAllReservations({ showtime_id: id })
+		const movie = append_to_response?.includes("movie")
+		const showtime = append_to_response?.includes("showtime")
+		const theatre = append_to_response?.includes("theatre")
+
+		const page = Number(requestedPage) || 1
+		const offset = (page - 1) * PAGE_SIZE
+
+		const reservations = await sql`
+			SELECT
+				reservations.seat_number,
+				reservations.status,
+				${showtime ? joinShowtimeObject() : sql`reservations.showtime_id`},
+				${movie ? joinMovieObject() : sql`showtime.movie_id`},
+				${theatre ? joinTheatreObject() : sql`showtime.theatre_id`},
+				reservations.created_at,
+				reservations.updated_at
+			FROM
+				reservations
+			JOIN
+				showtime ON reservations.showtime_id = showtime.id
+			JOIN
+				movies ON showtime.movie_id = movies.id
+			JOIN
+				theatres ON showtime.theatre_id = theatres.id
+			WHERE
+				reservations.showtime_id = ${id}
+			ORDER BY
+				reservations.created_at DESC
+			LIMIT ${PAGE_SIZE} OFFSET ${offset}
+		`
+		const count =
+			await sql`SELECT COUNT(*) FROM reservations WHERE showtime_id = ${id}`
+		const total = count.at(0)?.count
 
 		return res.status(HttpStatusCode.OK).json({
 			success: true,
 			message: "Showtime reservations fetched successfully!",
 			data: reservations,
+			meta: {
+				page: page,
+				per_page: PAGE_SIZE,
+				total: Number(total),
+				total_pages: Math.ceil(total / PAGE_SIZE) || 0,
+			},
 		})
 	} catch (error) {
 		return next(error)

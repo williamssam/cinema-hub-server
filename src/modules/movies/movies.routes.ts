@@ -10,7 +10,7 @@ import {
 	getAllMoviesHandler,
 	getMovieGenresController,
 	getMovieHandler,
-	getMovieShowtimeController,
+	getMovieShowtimeHandler,
 	updateMovieHandler,
 } from "./movies.controller"
 import {
@@ -87,6 +87,6 @@ export default (router: Router) => {
 	router.get(
 		"/movies/:id/showtime",
 		[validateResource(querySchema), deserializeUser, requireUser],
-		getMovieShowtimeController
+		getMovieShowtimeHandler
 	)
 };

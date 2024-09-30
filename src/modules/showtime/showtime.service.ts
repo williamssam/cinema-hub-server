@@ -17,7 +17,7 @@ export const getShowtimeWithId = async (id: string) => {
 export const getShowtime = async ({
 	id,
 	append,
-}: { id?: string; append?: string }) => {
+}: { id: string; append?: string }) => {
 	const theatre = append?.includes("theatre")
 	const movie = append?.includes("movie")
 
@@ -27,7 +27,7 @@ export const getShowtime = async ({
 			showtime.end_time,
 			showtime.start_time,
 			showtime.available_seats,
-			DIV(showtime.price, 100)::BIGINT as price,
+			(showtime.price / 100)::BIGINT AS price,
 			showtime.status,
 			${movie ? joinMovieObject() : sql`showtime.movie_id`},
 			${theatre ? joinTheatreObject() : sql`showtime.theatre_id`},
@@ -39,7 +39,8 @@ export const getShowtime = async ({
 			theatres ON showtime.theatre_id = theatres.id
 		JOIN
 			movies ON showtime.movie_id = movies.id
-		${id ? sql`WHERE showtime.id = ${id}` : sql``}
+		WHERE
+			showtime.id = ${id}
 		GROUP BY
 			showtime.id, theatres.id, movies.id
 		ORDER BY

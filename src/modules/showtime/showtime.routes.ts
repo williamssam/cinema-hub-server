@@ -10,13 +10,14 @@ import {
 	getAllShowtimeHandler,
 	getShowtimeAvailableSeatsHandler,
 	getShowtimeHandler,
-	getShowtimeReservations,
+	getShowtimeReservationsHandler,
 	getUpcomingShowtimeController,
 	updateShowtimeHandler,
 	updateShowtimeStatusHandler,
 } from "./showtime.controller"
 import {
 	createShowtimeSchema,
+	getShowtimeReservationSchema,
 	getShowtimeSchema,
 	updateShowtimeSchema,
 	updateShowtimeStatusSchema,
@@ -108,12 +109,12 @@ export default (router: Router) => {
 	router.get(
 		"/showtime/:id/reservation",
 		[
-			validateResource(getShowtimeSchema),
+			validateResource(getShowtimeReservationSchema),
 			deserializeUser,
 			requireUser,
 			ensureAdmin,
 		],
-		getShowtimeReservations
+		getShowtimeReservationsHandler
 	)
 
 

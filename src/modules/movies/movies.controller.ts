@@ -16,7 +16,6 @@ import {
 	getMovie,
 	getMovieGenres,
 	getMovieWithId,
-	getMovies,
 	joinMovieObject,
 	totalMovies,
 	updateMovieTransaction,
@@ -198,23 +197,36 @@ export const getMovieHandler = async (
 	}
 }
 
-// FIXME: Add pagination
+
 export const getAllMoviesHandler = async (
 	req: Request<unknown, unknown, unknown, GetAllMoviesInput>,
 	res: Response,
 	next: NextFunction
 ) => {
 	try {
-		// url: http://localhost:3000/movies?page=1&genre=1
 		const { page: requested_page, genre } = req.query
 
 		const page = Number(requested_page) || 1
-		const limit = 20
+		const offset = (page - 1) * PAGE_SIZE
 
-		const movies = await getMovies({
-			genreId: genre,
-			limit,
-		})
+		const movies = await sql`
+			SELECT
+					movies.id, movies.title, movies.tagline, movies.slug, movies.overview,
+					movies.release_date, movies.poster_image_url, movies.homepage,
+					movies.runtime, movies.director, JSON_AGG(JSONB_BUILD_OBJECT('id', genres.id, 'name', genres.name)) AS genres, movies.created_at, movies.updated_at
+				FROM
+					movies
+				JOIN
+					movie_genres ON movies.id = movie_genres.movie_id
+				JOIN
+					genres ON movie_genres.genre_id = genres.id
+				${genre ? sql`AND genres.id = ${genre}` : sql``}
+				GROUP BY
+					movies.id
+				ORDER BY
+					movies.created_at DESC
+				LIMIT ${PAGE_SIZE} AND OFFSET ${offset}
+		`
 		const total = await totalMovies(genre)
 
 		return res.status(HttpStatusCode.OK).json({
@@ -223,9 +235,9 @@ export const getAllMoviesHandler = async (
 			data: movies,
 			meta: {
 				page: page,
-				per_page: limit,
+				per_page: PAGE_SIZE,
 				total: Number(total),
-				total_pages: Math.ceil(total / limit) || 1,
+				total_pages: Math.ceil(total / PAGE_SIZE) || 1,
 			},
 		})
 	} catch (error) {
@@ -241,19 +253,22 @@ export const getAllMoviesHandler = async (
  * @returns {object} - The list of showtime, with the requested fields included, and pagination metadata
  * @throws {ApiError} - If the request fails
  */
-export const getMovieShowtimeController = async (
+export const getMovieShowtimeHandler = async (
 	req: Request<GetMovieInput, unknown, unknown, QueryInput>,
 	res: Response,
 	next: NextFunction
 ) => {
 	try {
 		const { id } = req.params
-		const { page = 1, append_to_response } = req.query
+		const { page: requestedPage, append_to_response } = req.query
 
 		const data = await getMovieWithId(id)
 		if (!data.length) {
 			throw new ApiError("Movie does not exist", HttpStatusCode.NOT_FOUND)
 		}
+
+		const page = Number(requestedPage) || 1
+		const offset = (page - 1) * PAGE_SIZE
 
 		const movie = append_to_response?.includes("movie")
 		const theatre = append_to_response?.includes("theatre")
@@ -282,6 +297,7 @@ export const getMovieShowtimeController = async (
 				showtime.id, theatres.id, movies.id
 			ORDER BY
 				start_time ASC
+			LIMIT ${PAGE_SIZE} OFFSET ${offset}
 		`
 		const count =
 			await sql`SELECT COUNT(*) FROM showtime WHERE movie_id = ${id} AND start_time >= NOW()`

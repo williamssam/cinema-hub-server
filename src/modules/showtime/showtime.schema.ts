@@ -71,6 +71,11 @@ export const getAllShowtimeSchema = querySchema.shape.query.extend({
 	append_to_response: z.string().optional(),
 })
 
+export const getShowtimeReservationSchema = z.object({
+	...getShowtimeSchema.shape,
+	...querySchema.shape,
+})
+
 export type CreateShowtimeInput = z.infer<typeof createShowtimeSchema>["body"]
 export type GetShowtimeInput = z.infer<typeof getShowtimeSchema>["params"]
 export type UpdateShowtimeInput = z.infer<typeof updateShowtimeSchema>
@@ -78,3 +83,6 @@ export type UpdateShowtimeStatusInput = z.infer<
 	typeof updateShowtimeStatusSchema
 >
 export type GetAllShowtimeInput = z.infer<typeof getAllShowtimeSchema>
+export type GetShowtimeReservationInput = z.infer<
+	typeof getShowtimeReservationSchema
+>

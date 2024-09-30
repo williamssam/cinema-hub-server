@@ -21,10 +21,7 @@ import type {
 	GetUserReservationsInput,
 	UpdateReservationStatusInput,
 } from "./reservations.schema"
-import {
-	createReservationTransaction,
-	getAllReservations,
-} from "./reservations.service"
+import { createReservationTransaction } from "./reservations.service"
 
 /**
  * @description Create a reservation
@@ -318,11 +315,14 @@ export const getUserReservationsHandler = async (
 ) => {
 	try {
 		const { id } = req.params
-		const { page = 1, append_to_response } = req.query
+		const { page: requestedPage, append_to_response } = req.query
 
 		const movie = append_to_response?.includes("movie")
 		const showtime = append_to_response?.includes("showtime")
 		const theatre = append_to_response?.includes("theatre")
+
+		const page = Number(requestedPage) || 1
+		const offset = (page - 1) * PAGE_SIZE
 
 		const reservations = await sql`
 			SELECT
@@ -345,6 +345,7 @@ export const getUserReservationsHandler = async (
 				reservations.user_id = ${id}
 			ORDER BY
 				reservations.created_at DESC
+			LIMIT ${PAGE_SIZE} OFFSET ${offset}
 		`
 
 		const count =
@@ -379,13 +380,36 @@ export const getAllReservationsHandler = async (
 	next: NextFunction
 ) => {
 	try {
-		const { page = 1, append_to_response } = req.query
+		const { page: requestedPage, append_to_response } = req.query
 
 		const movie = append_to_response?.includes("movie")
 		const showtime = append_to_response?.includes("showtime")
 		const theatre = append_to_response?.includes("theatre")
 
-		const reservations = await getAllReservations({ movie, showtime, theatre })
+		const page = Number(requestedPage) || 1
+		const offset = (page - 1) * PAGE_SIZE
+
+		const reservations = await sql`
+			SELECT
+				reservations.seat_number,
+				reservations.status,
+				${showtime ? joinShowtimeObject() : sql`reservations.showtime_id`},
+				${movie ? joinMovieObject() : sql`showtime.movie_id`},
+				${theatre ? joinTheatreObject() : sql`showtime.theatre_id`},
+				reservations.created_at,
+				reservations.updated_at
+			FROM
+				reservations
+			JOIN
+				showtime ON reservations.showtime_id = showtime.id
+			JOIN
+				movies ON showtime.movie_id = movies.id
+			JOIN
+				theatres ON showtime.theatre_id = theatres.id
+			ORDER BY
+				reservations.created_at DESC
+			LIMIT ${PAGE_SIZE} OFFSET ${offset}
+		`
 		const count = await sql`SELECT COUNT(*) FROM reservations`
 		const total = count.at(0)?.count
 
