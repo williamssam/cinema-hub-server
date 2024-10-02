@@ -32,6 +32,7 @@ The Movie Reservation System is a web application that allows users to manage mo
 	2. Users can reserve seats and pay for a showtime. If payment is not received within 20minutes, reserved seats are discarded and made available for others
 	3. Users can view their upcoming reservations and cancel them if needed.
 	4. Admins can view all reservations, including capacity and revenue statistics.
+	5. Users receives reservation confirmation mail and pay for their reservations.
 - Reporting: Admin can generate report for showtime reservations
 
 ## Getting Started
