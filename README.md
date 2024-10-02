@@ -70,7 +70,7 @@ The application provides several API endpoints for the functionalities mentioned
 | Add Reservation 	|  **/reservations** 	|  POST 	|  - 	|   	|
 | Cancel Reservation 	|  **/reservations/:id/cancel** 	|  POST 	|  - 	|   	|
 | Get available seats for a showtime 	|  **/showtime/:id/seats** 	|  GET 	|  - 	|   	|
-| Get reservations 	|  **/reservations** 	|  GET 	|  append_to_response=movies,theatres,showtime 	|  only admins 	|
+| Get reservations 	|  **/reservations** 	|  GET 	|  append_to_response 	|  only admins 	|
 | Get user reservations 	|  **/reservations/:id/user** 	|  GET 	|  - 	|   	|
 
 **NOTES:**
