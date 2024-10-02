@@ -521,7 +521,7 @@ export const reservationReportHandler = async (
 }
 
 // specifically for paystack
-export const verifyPaymentHandler = async (
+export const verifyPaymentWebhookHandler = async (
 	req: Request,
 	res: Response,
 	next: NextFunction

@@ -11,7 +11,7 @@ import {
 	getReservationHandler,
 	getUserReservationsHandler,
 	reservationReportHandler,
-	verifyPaymentHandler,
+	verifyPaymentWebhookHandler
 } from "./reservations.controller"
 import {
 	createReservationSchema,
@@ -78,5 +78,5 @@ export default (router: Router) => {
 	/*
 	 * DELETE route to cancel a reservation
 	 */
-	router.delete("/webhook/verify-payment", verifyPaymentHandler)
+	router.delete("/webhook/verify-payment", verifyPaymentWebhookHandler)
 }

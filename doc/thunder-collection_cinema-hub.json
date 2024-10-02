@@ -1,0 +1,541 @@
+{
+    "clientName": "Thunder Client",
+    "collectionName": "cinema-hub",
+    "collectionId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+    "dateExported": "2024-10-02T17:57:50.354Z",
+    "version": "1.2",
+    "folders": [
+        {
+            "_id": "7edf52fa-368a-4538-b1eb-287f70debf71",
+            "name": "movies",
+            "containerId": "",
+            "created": "2024-09-17T17:32:59.091Z",
+            "sortNum": 20000
+        },
+        {
+            "_id": "147d0ded-49e8-4920-bbc9-9218a87e4b9e",
+            "name": "theatres",
+            "containerId": "",
+            "created": "2024-09-21T19:41:24.189Z",
+            "sortNum": 30000
+        },
+        {
+            "_id": "ad6fa2a0-7bb7-4231-b7d6-099b17c2fe38",
+            "name": "showtime",
+            "containerId": "",
+            "created": "2024-09-21T20:11:48.992Z",
+            "sortNum": 40000
+        },
+        {
+            "_id": "5195e029-5ac6-40b3-8dcc-48f76decf7de",
+            "name": "reservations",
+            "containerId": "",
+            "created": "2024-09-22T12:56:54.323Z",
+            "sortNum": 50000
+        },
+        {
+            "_id": "b2586d9d-e344-4578-bebe-69df36617ca2",
+            "name": "user (auth)",
+            "containerId": "",
+            "created": "2024-09-23T12:46:09.753Z",
+            "sortNum": 60000
+        }
+    ],
+    "requests": [
+        {
+            "_id": "5bb6c021-8566-4380-af7f-9d640be11669",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "",
+            "name": "health-check",
+            "url": "/health-check",
+            "method": "GET",
+            "sortNum": 10000,
+            "created": "2024-09-17T15:08:11.854Z",
+            "modified": "2024-09-17T17:31:17.375Z",
+            "headers": []
+        },
+        {
+            "_id": "e80ea671-ee2e-4002-aa03-33aedef0f10b",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "7edf52fa-368a-4538-b1eb-287f70debf71",
+            "name": "movie genres",
+            "url": "/movies/genre",
+            "method": "GET",
+            "sortNum": 20000,
+            "created": "2024-09-17T17:33:13.508Z",
+            "modified": "2024-09-18T12:36:00.865Z",
+            "headers": []
+        },
+        {
+            "_id": "80cdcc94-9546-449e-a4e7-92e9028dde1c",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "7edf52fa-368a-4538-b1eb-287f70debf71",
+            "name": "Add new movie",
+            "url": "/movies",
+            "method": "POST",
+            "sortNum": 30000,
+            "created": "2024-09-18T12:29:31.503Z",
+            "modified": "2024-09-21T19:35:23.818Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"title\": \"Deadpool & Wolverine\",\n  \"tagline\": \"Come together\",\n  \"overview\": \"A listless Wade Wilson toils away in civilian life with his days as the morally flexible mercenary, Deadpool, behind him. But when his homeworld faces an existential threat, Wade must reluctantly suit-up again with an even more reluctant Wolverine\",\n  \"original_language\": \"English\",\n  \"poster_image_url\": \"https://media.themoviedb.org/t/p/w600_and_h900_bestv2/b33nnKl1GSFbao4l3fZDDqsMx0F.jpg\",\n  \"genre_ids\": [1,2,7],\n  \"runtime\": 128,\n  \"homepage\": \"https://www.20thcenturystudios.com/movies/alien-romulus\",\n  \"release_date\": \"2024-07-26\",\n  \"director\": \"Shawn Levy\",\n  \"origin_country\": \"US\",\n  \"trailer_link\": \"https://www.youtube.com/watch?v=73_1biulkYk&pp=ygUQZGVhZHBvb2wgdHJhaWxlcg%3D%3D\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "b0ed2e7e-f45e-420a-8e38-5f89089cc746",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "7edf52fa-368a-4538-b1eb-287f70debf71",
+            "name": "Get movie",
+            "url": "/movies/1",
+            "method": "GET",
+            "sortNum": 40000,
+            "created": "2024-09-19T11:39:30.042Z",
+            "modified": "2024-09-20T09:10:25.213Z",
+            "headers": []
+        },
+        {
+            "_id": "751916a5-ce1c-4ae6-928b-84f24976eb2e",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "7edf52fa-368a-4538-b1eb-287f70debf71",
+            "name": "Get all movies",
+            "url": "/movies",
+            "method": "GET",
+            "sortNum": 50000,
+            "created": "2024-09-19T12:52:43.484Z",
+            "modified": "2024-09-19T17:42:58.958Z",
+            "headers": []
+        },
+        {
+            "_id": "fb19084c-58c9-4636-ac32-4bdae73b7f94",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "7edf52fa-368a-4538-b1eb-287f70debf71",
+            "name": "testing",
+            "url": "/mmm",
+            "method": "GET",
+            "sortNum": 60000,
+            "created": "2024-09-19T17:29:29.565Z",
+            "modified": "2024-09-19T17:29:34.564Z",
+            "headers": []
+        },
+        {
+            "_id": "f06ed014-7ebf-49e0-abe5-3b003b1ee907",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "7edf52fa-368a-4538-b1eb-287f70debf71",
+            "name": "Delete movie",
+            "url": "/movies/2",
+            "method": "DELETE",
+            "sortNum": 70000,
+            "created": "2024-09-19T17:43:26.381Z",
+            "modified": "2024-09-19T17:44:43.726Z",
+            "headers": []
+        },
+        {
+            "_id": "452b8e6e-1aee-44d4-83a1-0a6f5332c2d4",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "7edf52fa-368a-4538-b1eb-287f70debf71",
+            "name": "Update movie",
+            "url": "/movies/1",
+            "method": "PUT",
+            "sortNum": 80000,
+            "created": "2024-09-20T09:11:23.177Z",
+            "modified": "2024-09-21T19:34:32.508Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"title\": \"Deadpool & Wolverine\",\n  \"tagline\": \"Come together\",\n  \"overview\": \"A listless Wade Wilson toils away in civilian life with his days as the morally flexible mercenary, Deadpool, behind him. But when his homeworld faces an existential threat, Wade must reluctantly suit-up again with an even more reluctant Wolverine\",\n  \"original_language\": \"English\",\n  \"poster_image_url\": \"https://media.themoviedb.org/t/p/w600_and_h900_bestv2/b33nnKl1GSFbao4l3fZDDqsMx0F.jpg\",\n  \"genre_ids\": [1,2,7],\n  \"runtime\": 128,\n  \"homepage\": \"https://www.marvel.com/movies/deadpool-and-wolverine\",\n  \"release_date\": \"2024-07-26\",\n  \"director\": \"Shawn Levy\",\n  \"origin_country\": \"US\",\n  \"trailer_link\": \"https://www.youtube.com/watch?v=73_1biulkYk&pp=ygUQZGVhZHBvb2wgdHJhaWxlcg%3D%3D\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "563145d5-d873-4473-ae74-25aa7cca333a",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "147d0ded-49e8-4920-bbc9-9218a87e4b9e",
+            "name": "Get all theatres",
+            "url": "/theatres",
+            "method": "GET",
+            "sortNum": 90000,
+            "created": "2024-09-21T19:41:34.405Z",
+            "modified": "2024-09-21T19:42:48.783Z",
+            "headers": []
+        },
+        {
+            "_id": "807a373c-239e-431a-bb74-09b79d8a27db",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "147d0ded-49e8-4920-bbc9-9218a87e4b9e",
+            "name": "Add new theatre",
+            "url": "/theatres",
+            "method": "POST",
+            "sortNum": 100000,
+            "created": "2024-09-21T19:48:38.651Z",
+            "modified": "2024-10-02T16:42:33.695Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"name\": \"theatre-one\",\n  \"capacity\": 200,\n  \"seats_per_row\": 15\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "1899e082-f79f-4355-a46d-8d4275f81039",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "147d0ded-49e8-4920-bbc9-9218a87e4b9e",
+            "name": "Delete theatre",
+            "url": "/theatres/7",
+            "method": "DELETE",
+            "sortNum": 110000,
+            "created": "2024-09-21T20:00:04.852Z",
+            "modified": "2024-09-21T20:05:43.203Z",
+            "headers": []
+        },
+        {
+            "_id": "6f1cebd4-ac97-46b3-b44b-444d4a326179",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "147d0ded-49e8-4920-bbc9-9218a87e4b9e",
+            "name": "Get one theatre",
+            "url": "/theatres/8",
+            "method": "GET",
+            "sortNum": 120000,
+            "created": "2024-09-21T20:06:36.902Z",
+            "modified": "2024-09-21T20:08:33.410Z",
+            "headers": []
+        },
+        {
+            "_id": "fd703d4c-6b65-4551-b3fb-e0c302878738",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "147d0ded-49e8-4920-bbc9-9218a87e4b9e",
+            "name": "Update theatre",
+            "url": "/theatres/8",
+            "method": "PUT",
+            "sortNum": 130000,
+            "created": "2024-09-21T20:07:51.908Z",
+            "modified": "2024-09-21T20:09:35.911Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"name\": \"theatre-four\",\n  \"capacity\": 100\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "153bf850-27a1-44ff-9600-c9d16233b27e",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "ad6fa2a0-7bb7-4231-b7d6-099b17c2fe38",
+            "name": "Get all showtime",
+            "url": "/showtime?append_to_response=theatre",
+            "method": "GET",
+            "sortNum": 140000,
+            "created": "2024-09-21T20:12:00.446Z",
+            "modified": "2024-09-30T11:41:49.116Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "append_to_response",
+                    "value": "theatre",
+                    "isPath": false
+                }
+            ]
+        },
+        {
+            "_id": "ee0469de-48c9-4d62-acee-ba9c125b95c4",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "ad6fa2a0-7bb7-4231-b7d6-099b17c2fe38",
+            "name": "Add new showtime",
+            "url": "/showtime",
+            "method": "POST",
+            "sortNum": 150000,
+            "created": "2024-09-21T20:43:36.941Z",
+            "modified": "2024-10-02T17:22:57.546Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"movie_id\": 1,\n  \"theatre_id\": 1,\n  \"start_time\": \"2024-10-03T15:10:00.000Z\",\n  \"end_time\": \"2024-10-03T16:10:00.000Z\",\n  \"price\": 3000\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "ca21898f-37d5-47e9-8ad4-e86f7c4d236b",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "ad6fa2a0-7bb7-4231-b7d6-099b17c2fe38",
+            "name": "Delete showtime",
+            "url": "/showtime/1",
+            "method": "DELETE",
+            "sortNum": 160000,
+            "created": "2024-09-22T02:05:52.472Z",
+            "modified": "2024-09-22T09:56:09.580Z",
+            "headers": []
+        },
+        {
+            "_id": "cd722f3c-c8cd-417d-b369-51feb8647b53",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "ad6fa2a0-7bb7-4231-b7d6-099b17c2fe38",
+            "name": "Get one showtime",
+            "url": "/showtime/1?append_to_response=theatre",
+            "method": "GET",
+            "sortNum": 170000,
+            "created": "2024-09-22T02:08:14.968Z",
+            "modified": "2024-09-22T09:29:57.854Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "append_to_response",
+                    "value": "theatre",
+                    "isPath": false
+                }
+            ]
+        },
+        {
+            "_id": "f160fa91-c065-4078-928c-e11762dc1670",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "ad6fa2a0-7bb7-4231-b7d6-099b17c2fe38",
+            "name": "Update showtime status",
+            "url": "/showtime/2",
+            "method": "PATCH",
+            "sortNum": 180000,
+            "created": "2024-09-22T09:43:08.286Z",
+            "modified": "2024-09-22T09:56:36.345Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"status\": \"inactive\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "439a051c-8ecb-4962-b269-0aa62dcb9950",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "ad6fa2a0-7bb7-4231-b7d6-099b17c2fe38",
+            "name": "Get showtime available seats",
+            "url": "/showtime/1/seats",
+            "method": "GET",
+            "sortNum": 190000,
+            "created": "2024-09-22T09:49:22.490Z",
+            "modified": "2024-09-23T12:18:38.514Z",
+            "headers": []
+        },
+        {
+            "_id": "6a690eb1-ea67-4d4c-b15d-e9c162078c67",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "ad6fa2a0-7bb7-4231-b7d6-099b17c2fe38",
+            "name": "Update showtime",
+            "url": "/showtime/2",
+            "method": "PUT",
+            "sortNum": 200000,
+            "created": "2024-09-22T09:58:02.723Z",
+            "modified": "2024-09-22T10:00:42.538Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"movie_id\": 1,\n  \"theatre_id\": 1,\n  \"start_time\": \"2024-09-23T13:10:00.000Z\",\n  \"end_time\": \"2024-09-23T15:10:00.000Z\",\n  \"price\": 150000\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "25a4be13-8a22-4770-b0c5-11941a2b2bc0",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "b2586d9d-e344-4578-bebe-69df36617ca2",
+            "name": "Register",
+            "url": "/auth/register",
+            "method": "POST",
+            "sortNum": 210000,
+            "created": "2024-09-23T12:46:16.858Z",
+            "modified": "2024-09-25T14:27:15.074Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"name\": \"Agba Cooker\",\n  \"email\": \"agbacooker@yopmail.com\",\n  \"password\": \"agbacooker\",\n  \"role\": \"user\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "679608de-babc-4c8b-a834-0747a3627cb8",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "b2586d9d-e344-4578-bebe-69df36617ca2",
+            "name": "Login",
+            "url": "/auth/login",
+            "method": "POST",
+            "sortNum": 220000,
+            "created": "2024-09-23T12:48:53.267Z",
+            "modified": "2024-09-25T14:49:35.719Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"email\": \"admin@cinemahub.com\",\n  \"password\": \"password\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "2e8f0e26-0924-4c58-93d1-492c5b07a9f4",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "b2586d9d-e344-4578-bebe-69df36617ca2",
+            "name": "Get current user",
+            "url": "/auth/me",
+            "method": "GET",
+            "sortNum": 230000,
+            "created": "2024-09-23T13:00:42.620Z",
+            "modified": "2024-09-24T22:07:24.060Z",
+            "headers": [],
+            "auth": {
+                "type": "bearer",
+                "bearer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjozLCJlbWFpbCI6ImFnYmFjb29rZXJAeW9wbWFpbC5jb20iLCJuYW1lIjoiQWdiYSBDb29rZXIiLCJsYXN0X2xvZ2luIjoiMjAyNC0wOS0yNFQyMTozMDowNS4xNjFaIiwicm9sZSI6eyJpZCI6MSwibmFtZSI6InVzZXIifX0sImlhdCI6MTcyNzIxNTYyOSwiZXhwIjoxNzI3MjE2NTI5fQ.VysM9MC_wN1Qe4E83heoAT2XsRiCwl6YYqtuvDtoqcE"
+            }
+        },
+        {
+            "_id": "95a4c6a8-515c-4fbb-9eee-fb0199d41348",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "b2586d9d-e344-4578-bebe-69df36617ca2",
+            "name": "Change password",
+            "url": "/auth/change-password",
+            "method": "PATCH",
+            "sortNum": 250000,
+            "created": "2024-09-23T14:09:31.728Z",
+            "modified": "2024-09-24T21:30:16.716Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"old_password\": \"agbacooker\",\n  \"new_password\": \"agbaCooker\"\n}",
+                "form": []
+            },
+            "auth": {
+                "type": "bearer",
+                "bearer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjozLCJlbWFpbCI6ImFnYmFjb29rZXJAeW9wbWFpbC5jb20iLCJuYW1lIjoiQWdiYSBDb29rZXIiLCJsYXN0X2xvZ2luIjoiMjAyNC0wOS0yM1QxNDoxMzoxNS42NzBaIiwicm9sZSI6eyJpZCI6MSwibmFtZSI6InVzZXIifX0sImlhdCI6MTcyNzIxMzQwNSwiZXhwIjoxNzI3MjE0MzA1fQ.ZLMewF7kAyjoj1gjXxlxCIb8KEpED9ogOhA4loOnTvk"
+            }
+        },
+        {
+            "_id": "e02c861f-812d-45b1-a21f-8485063c25b1",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "b2586d9d-e344-4578-bebe-69df36617ca2",
+            "name": "Refresh token",
+            "url": "/auth/refresh-token",
+            "method": "GET",
+            "sortNum": 260000,
+            "created": "2024-09-23T14:10:19.269Z",
+            "modified": "2024-10-02T17:49:45.256Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzI3ODg3Mjc1LCJleHAiOjE3Mjg0OTIwNzV9.z6kkj6OFzjNDmmIeXfChIYiEQpHPetQzNCMYQplG0_I\"\n}",
+                "form": []
+            },
+            "auth": {
+                "type": "bearer",
+                "bearer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoxLCJlbWFpbCI6ImFkbWluQGNpbmVtYWh1Yi5jb20iLCJuYW1lIjoiYWRtaW4iLCJsYXN0X2xvZ2luIjpudWxsLCJyb2xlIjoiYWRtaW4ifSwiaWF0IjoxNzI3ODg3Mjc1LCJleHAiOjE3Mjc4OTA4NzV9.uFQVePLQzNUmHlBIbJiARQy_7dxpHgey8qT9JZ9aspE"
+            }
+        },
+        {
+            "_id": "48251a2b-f445-4fe3-8c11-31da5bd1519f",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "5195e029-5ac6-40b3-8dcc-48f76decf7de",
+            "name": "Get all reservations (user)",
+            "url": "/reservations?append_to_response=movie,theatre",
+            "method": "GET",
+            "sortNum": 270000,
+            "created": "2024-09-25T15:03:24.493Z",
+            "modified": "2024-10-02T17:50:22.327Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "append_to_response",
+                    "value": "movie,theatre",
+                    "isPath": false
+                }
+            ]
+        },
+        {
+            "_id": "79452b16-351c-465f-b059-7bb5509aaddb",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "5195e029-5ac6-40b3-8dcc-48f76decf7de",
+            "name": "Get a reservation",
+            "url": "/reservations/1",
+            "method": "GET",
+            "sortNum": 280000,
+            "created": "2024-09-25T16:46:21.191Z",
+            "modified": "2024-09-28T18:04:54.888Z",
+            "headers": [],
+            "auth": {
+                "type": "bearer",
+                "bearer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoyLCJlbWFpbCI6ImFnYmFjb29rZXJAeW9wbWFpbC5jb20iLCJuYW1lIjoiQWdiYSBDb29rZXIiLCJsYXN0X2xvZ2luIjoiMjAyNC0wOS0yOFQxMDoxODozOC4xMjlaIiwicm9sZSI6InVzZXIifSwiaWF0IjoxNzI3NTQ2NjQzLCJleHAiOjE3Mjc1NTAyNDN9._slt0A9YNSsMUGZLNoX7IqJKiPxeLK27S4si6EGMYbk"
+            }
+        },
+        {
+            "_id": "8f7ac240-6763-4fb0-8215-8b56c41301b4",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "5195e029-5ac6-40b3-8dcc-48f76decf7de",
+            "name": "Create reservation",
+            "url": "/reservations",
+            "method": "POST",
+            "sortNum": 290000,
+            "created": "2024-09-25T16:51:05.157Z",
+            "modified": "2024-10-02T16:45:00.417Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"seat_numbers\": [\"A022\", \"A025\"],\n  \"showtime_id\": 1,\n  \"user_id\": 2\n}",
+                "form": []
+            },
+            "auth": {
+                "type": "bearer",
+                "bearer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoyLCJlbWFpbCI6ImFnYmFjb29rZXJAeW9wbWFpbC5jb20iLCJuYW1lIjoiQWdiYSBDb29rZXIiLCJsYXN0X2xvZ2luIjpudWxsLCJyb2xlIjoidXNlciJ9LCJpYXQiOjE3Mjc4ODc0MTIsImV4cCI6MTcyNzg5MTAxMn0.3ul6o3eOq9Ar_XOxOK7jFD09vQ9-Zht4PD01i2LOehU"
+            }
+        },
+        {
+            "_id": "7d59d805-fdcb-47c3-8a11-a25bc2d60570",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "5195e029-5ac6-40b3-8dcc-48f76decf7de",
+            "name": "Reservation report",
+            "url": "/reservations/report",
+            "method": "GET",
+            "sortNum": 300000,
+            "created": "2024-09-28T18:05:27.596Z",
+            "modified": "2024-09-28T18:05:34.801Z",
+            "headers": []
+        },
+        {
+            "_id": "f630413f-8917-42c1-b9e4-01a306c80a4a",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "ad6fa2a0-7bb7-4231-b7d6-099b17c2fe38",
+            "name": "Get showtime reservation",
+            "url": "/showtime/1/reservation",
+            "method": "GET",
+            "sortNum": 310000,
+            "created": "2024-09-28T18:17:15.737Z",
+            "modified": "2024-09-28T18:17:33.167Z",
+            "headers": []
+        },
+        {
+            "_id": "9f3995c6-1461-408f-9f0d-1f21486ae0b7",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "5195e029-5ac6-40b3-8dcc-48f76decf7de",
+            "name": "Get all reservations",
+            "url": "/reservations",
+            "method": "GET",
+            "sortNum": 320000,
+            "created": "2024-09-28T18:31:33.963Z",
+            "modified": "2024-09-28T18:39:18.200Z",
+            "headers": []
+        },
+        {
+            "_id": "b920610b-8c92-48a7-a6ff-b00ced6730d5",
+            "colId": "0d5f098b-ed9a-4a79-adf2-6e4ff7d54acb",
+            "containerId": "5195e029-5ac6-40b3-8dcc-48f76decf7de",
+            "name": "Cancel reservation",
+            "url": "/reservations/2/cancel",
+            "method": "DELETE",
+            "sortNum": 330000,
+            "created": "2024-09-28T18:39:38.854Z",
+            "modified": "2024-09-28T18:57:14.059Z",
+            "headers": []
+        }
+    ],
+    "settings": {
+        "auth": {
+            "type": "bearer",
+            "bearer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoxLCJuYW1lIjoiYWRtaW4iLCJlbWFpbCI6ImFkbWluQGNpbmVtYWh1Yi5jb20iLCJyb2xlIjoiYWRtaW4ifSwiaWF0IjoxNzI3ODkxMzg1LCJleHAiOjE3Mjc4OTQ5ODV9.YeEEib0gcIbuVVdGhBKjnQ1p8fhEP7g3xwSlk3GOJDM"
+        },
+        "options": {
+            "baseUrl": "http://localhost:4321/api/v1"
+        }
+    },
+    "ref": "7IF_mi_iUD1jHdL4YDhg-lQfaWYS58IvpyrDxhh3ut5MRxyeGxqcqYSEyCkrEtcuWgLaC99FgSnlA_K8rGHhKQ"
+}
