@@ -1,5 +1,7 @@
 # Cinema Hub (A Movie Reservation System)
 
+Project URL: [https://roadmap.sh/projects/movie-reservation-system](https://roadmap.sh/projects/movie-reservation-system)
+
 The Movie Reservation System is a web application that allows users to manage movie reservations, including signing up, logging in, and making reservations for showtime. Admins have additional functionalities for managing movies, showtime, and user roles.
 
 ## Tech Stack
@@ -81,6 +83,3 @@ The application provides several API endpoints for the functionalities mentioned
 
 ## Conclusion
 This Movie Reservation System provides a comprehensive solution for managing movie reservations, catering to both users and admins. With its robust authentication and management features, it aims to enhance the movie-going experience.
-
-## Reference
-Project URL: [https://roadmap.sh/projects/movie-reservation-system](https://roadmap.sh/projects/movie-reservation-system)
